@@ -6,7 +6,7 @@ export default function Topbar({ searchQuery, setSearchQuery, onReset }) {
     <div className="topbar">
       <div className="topbar-left">
         <img 
-          src="/media/aceo.png" 
+          src={`${import.meta.env.BASE_URL}media/aceo.png`} 
           alt="aceo logo" 
           style={{ height: '35px', objectFit: 'contain' }} 
           onError={(e) => {
