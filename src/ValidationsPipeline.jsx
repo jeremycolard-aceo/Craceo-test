@@ -508,7 +508,7 @@ export default function ValidationsPipeline({
                     <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--primary-color)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span className="text-white" style={{ fontSize: '10px' }}>📄</span>
                     </div>
-                    <span className="badge font-bold text-xs" style={{ backgroundColor: 'transparent', color: 'var(--text-main)' }}>ACTIVE ACCOUNT <Paperclip size={12} className="inline ml-1" /></span>
+                    <span className="badge font-bold text-xs" style={{ backgroundColor: 'transparent', color: 'var(--text-main)' }}><Paperclip size={12} className="inline ml-1" /></span>
                   </div>
 
                   <div className="form-group">
