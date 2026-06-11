@@ -44,6 +44,18 @@ export default function ValidationsPipeline({
   const [validationModal, setValidationModal] = useState({ isOpen: false, consultant: null });
   const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of active 3-dots menu
   const [previewingFile, setPreviewingFile] = useState(null); // Document preview state
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkSelectedIds, setBulkSelectedIds] = useState([]);
+  const [bulkValidationModalOpen, setBulkValidationModalOpen] = useState(false);
+
+  const handleBulkValidateConfirm = () => {
+    bulkSelectedIds.forEach(id => {
+      updateConsultant(id, { archived: true });
+    });
+    setBulkSelectedIds([]);
+    setIsBulkMode(false);
+    setBulkValidationModalOpen(false);
+  };
 
   // Force re-renders for live relative time updates
   const [tick, setTick] = useState(0);
@@ -374,52 +386,151 @@ export default function ValidationsPipeline({
 
         {/* Column 3: Validation */}
         <div className="kanban-column">
-          <div className="kanban-header">
-            <span style={{ color: '#10B981' }}>●</span> Validation
+          <div className="kanban-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#10B981' }}>●</span> Validation
+            </div>
+            {validationConsultants.length > 0 && (
+              <button 
+                className="btn btn-outline" 
+                style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}
+                onClick={() => {
+                  setIsBulkMode(!isBulkMode);
+                  setBulkSelectedIds([]);
+                }}
+              >
+                {isBulkMode ? 'Cancel' : 'Bulk Validate'}
+              </button>
+            )}
           </div>
+
+          {isBulkMode && validationConsultants.length > 0 && (
+            <div className="bulk-control-bar" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              padding: '10px',
+              marginBottom: '10px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '6px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 500 }}>
+                  <input 
+                    type="checkbox"
+                    checked={bulkSelectedIds.length === validationConsultants.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setBulkSelectedIds(validationConsultants.map(c => c.id));
+                      } else {
+                        setBulkSelectedIds([]);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  Select All
+                </label>
+                <span className="font-semibold" style={{ color: 'var(--text-muted)' }}>
+                  {bulkSelectedIds.length} / {validationConsultants.length} selected
+                </span>
+              </div>
+              <button
+                className="btn btn-primary"
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.75rem',
+                  backgroundColor: 'var(--success-color)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: bulkSelectedIds.length > 0 ? 'pointer' : 'not-allowed',
+                  opacity: bulkSelectedIds.length > 0 ? 1 : 0.6,
+                  fontWeight: 600,
+                  width: '100%'
+                }}
+                disabled={bulkSelectedIds.length === 0}
+                onClick={() => setBulkValidationModalOpen(true)}
+              >
+                Validate Selected
+              </button>
+            </div>
+          )}
+
           <div className="kanban-cards">
             {validationConsultants.map(c => (
               <div 
                 key={`val-${c.id}`} 
-                className="kanban-card validation-ready"
-                onClick={() => handleCardClick(c)}
-                title="Click to validate definitively"
-                style={{ position: 'relative' }}
+                className={`kanban-card validation-ready ${isBulkMode && bulkSelectedIds.includes(c.id) ? 'bulk-selected' : ''}`}
+                onClick={() => {
+                  if (isBulkMode) {
+                    setBulkSelectedIds(prev => 
+                      prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                    );
+                  } else {
+                    handleCardClick(c);
+                  }
+                }}
+                title={isBulkMode ? "Click to toggle selection" : "Click to validate definitively"}
+                style={{ 
+                  position: 'relative',
+                  border: isBulkMode && bulkSelectedIds.includes(c.id) ? '2px solid var(--success-color)' : '1px solid var(--border-color)',
+                  backgroundColor: isBulkMode && bulkSelectedIds.includes(c.id) ? 'rgba(16, 185, 129, 0.03)' : '',
+                  cursor: 'pointer'
+                }}
               >
                 <div className="flex justify-between items-center mb-3" style={{ position: 'relative' }}>
-                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
-                    {c.firstname} {c.name}
-                    {c.external && (
-                      <span 
-                        style={{ 
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: '#E0F2FE',
-                          color: '#0369A1',
-                          fontSize: '0.75rem',
-                          fontWeight: 'bold',
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
-                          marginLeft: '6px',
-                          verticalAlign: 'middle'
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                    {isBulkMode && (
+                      <input 
+                        type="checkbox"
+                        checked={bulkSelectedIds.includes(c.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setBulkSelectedIds(prev => 
+                            prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                          );
                         }}
-                        title="External Consultant"
-                      >
-                        E
-                      </span>
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', flexShrink: 0 }}
+                      />
                     )}
-                  </h3>
+                    <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {c.firstname} {c.name}
+                      {c.external && (
+                        <span 
+                          style={{ 
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#E0F2FE',
+                            color: '#0369A1',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            marginLeft: '6px',
+                            verticalAlign: 'middle',
+                            flexShrink: 0
+                          }}
+                          title="External Consultant"
+                        >
+                          E
+                        </span>
+                      )}
+                    </h3>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)' }}>Ready</span>
-                    <MoreHorizontal 
-                      className="text-light cursor-pointer hover:text-primary" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveCardMenu(activeCardMenu === c.id ? null : c.id);
-                      }} 
-                    />
+                    {!isBulkMode && (
+                      <MoreHorizontal 
+                        className="text-light cursor-pointer hover:text-primary" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveCardMenu(activeCardMenu === c.id ? null : c.id);
+                        }} 
+                      />
+                    )}
                   </div>
                   {activeCardMenu === c.id && (
                     <>
@@ -729,6 +840,67 @@ export default function ValidationsPipeline({
                 onClick={handleValidateConfirm}
               >
                 Validate & Archive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Validation Confirmation Modal */}
+      {bulkValidationModalOpen && (
+        <div className="modal-overlay" onClick={() => setBulkValidationModalOpen(false)}>
+          <div className="modal-container" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Bulk Timesheet Validation</h3>
+              <button 
+                className="btn-text text-light text-xl" 
+                onClick={() => setBulkValidationModalOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <p className="m-0 text-sm text-muted mb-4">
+                Are you sure you want to validate timesheets and archive the folder for the following <strong>{bulkSelectedIds.length} consultant(s)</strong>?
+              </p>
+              <div style={{
+                maxHeight: '150px',
+                overflowY: 'auto',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                padding: '10px',
+                backgroundColor: '#F8FAFC',
+                marginBottom: '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                {validationConsultants.filter(c => bulkSelectedIds.includes(c.id)).map(c => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary-color)' }}>
+                    <div className="avatar" style={{ width: '20px', height: '20px', fontSize: '8px' }}>{c.initials}</div>
+                    <span>{c.firstname} {c.name}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="m-0 text-xs text-light">
+                This will validate all selected folders and archive them. This action can be undone individually on each consultant's profile if needed.
+              </p>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="btn btn-outline" 
+                onClick={() => setBulkValidationModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ backgroundColor: 'var(--success-color)' }}
+                onClick={handleBulkValidateConfirm}
+              >
+                Confirm Bulk Validation
               </button>
             </div>
           </div>
