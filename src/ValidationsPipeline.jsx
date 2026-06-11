@@ -177,7 +177,30 @@ export default function ValidationsPipeline({
             {craConsultants.map(c => (
               <div key={`cra-${c.id}`} className="kanban-card">
                 <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', position: 'relative' }}>
-                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>{c.firstname} {c.name}</h3>
+                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
+                    {c.firstname} {c.name}
+                    {c.external && (
+                      <span 
+                        style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#E0F2FE',
+                          color: '#0369A1',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          marginLeft: '6px',
+                          verticalAlign: 'middle'
+                        }}
+                        title="External Consultant"
+                      >
+                        E
+                      </span>
+                    )}
+                  </h3>
                   <MoreHorizontal 
                     className="text-light cursor-pointer hover:text-primary" 
                     onClick={(e) => {
@@ -237,7 +260,30 @@ export default function ValidationsPipeline({
             {billingConsultants.map(c => (
               <div key={`bill-${c.id}`} className="kanban-card">
                 <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', position: 'relative' }}>
-                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>{c.firstname} {c.name}</h3>
+                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
+                    {c.firstname} {c.name}
+                    {c.external && (
+                      <span 
+                        style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#E0F2FE',
+                          color: '#0369A1',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          marginLeft: '6px',
+                          verticalAlign: 'middle'
+                        }}
+                        title="External Consultant"
+                      >
+                        E
+                      </span>
+                    )}
+                  </h3>
                   <MoreHorizontal 
                     className="text-light cursor-pointer hover:text-primary" 
                     onClick={(e) => {
@@ -318,7 +364,30 @@ export default function ValidationsPipeline({
                 style={{ position: 'relative' }}
               >
                 <div className="flex justify-between items-center mb-3" style={{ position: 'relative' }}>
-                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>{c.firstname} {c.name}</h3>
+                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
+                    {c.firstname} {c.name}
+                    {c.external && (
+                      <span 
+                        style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#E0F2FE',
+                          color: '#0369A1',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          marginLeft: '6px',
+                          verticalAlign: 'middle'
+                        }}
+                        title="External Consultant"
+                      >
+                        E
+                      </span>
+                    )}
+                  </h3>
                   <div className="flex items-center gap-2">
                     <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)' }}>Ready</span>
                     <MoreHorizontal 

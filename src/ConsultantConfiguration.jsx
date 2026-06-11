@@ -328,8 +328,29 @@ export default function ConsultantConfiguration({
                 <div className="flex items-center gap-4">
                   <div className="avatar avatar-lg">{consultant.initials}</div>
                   <div>
-                    <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>
+                    <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
                       {consultant.firstname} {consultant.name}
+                      {consultant.external && (
+                        <span 
+                          style={{ 
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#E0F2FE',
+                            color: '#0369A1',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            marginLeft: '6px',
+                            verticalAlign: 'middle'
+                          }}
+                          title="External Consultant"
+                        >
+                          E
+                        </span>
+                      )}
                     </h3>
                     <p className="m-0 text-sm text-muted">{consultant.role}</p>
                   </div>
@@ -555,6 +576,18 @@ export default function ConsultantConfiguration({
                 </div>
               </div>
 
+              <div className="form-group mb-0">
+                <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)', marginTop: '0.5rem' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={!!editingConsultant.external} 
+                    onChange={e => setEditingConsultant({...editingConsultant, external: e.target.checked})}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--accent-color)', cursor: 'pointer' }}
+                  />
+                  <span>External Consultant</span>
+                </label>
+              </div>
+ 
               <div className="form-group mb-0">
                 <label className="form-label">Comments</label>
                 <textarea className="form-input" rows="3" value={editingConsultant.comments || ''} onChange={e => setEditingConsultant({...editingConsultant, comments: e.target.value})}></textarea>
