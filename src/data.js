@@ -6,9 +6,7 @@ export const mockConsultants = [
     role: "Senior Project Manager",
     initials: "NS",
     cras: [
-      { id: 'cra1', name: "CRA INETUM", validated: false },
-      { id: 'cra2', name: "BOOND", validated: true },
-      { id: 'cra3', name: "CRA LBC", validated: true }
+      { id: 'cra2', name: "BOOND", validated: true }
     ],
     assignments: [
       { id: 'ass1', client: "Veolia", startDate: "2023-01-15", endDate: "2024-12-31" }
@@ -86,7 +84,6 @@ export const mockConsultants = [
     role: "DevOps Architect",
     initials: "QA",
     cras: [
-      { id: 'cra5', name: "CRA LBC", validated: true },
       { id: 'cra6', name: "BOOND", validated: true }
     ],
     assignments: [],
