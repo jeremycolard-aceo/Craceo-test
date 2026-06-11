@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreHorizontal, PlusCircle, Trash2, X, Save } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, X, Save, Eye } from 'lucide-react';
 
 const getInitials = (firstname, lastname) => {
   const f = firstname ? firstname.charAt(0).toUpperCase() : "";
@@ -10,15 +10,16 @@ const getInitials = (firstname, lastname) => {
 export default function ConsultantConfiguration({ 
   consultants, 
   setConsultants, 
+  updateConsultant,
   filteredConsultants, 
   onOpenFilter,
-  handleUndo,
-  canUndo 
+  handleUndo 
 }) {
   const [editingConsultant, setEditingConsultant] = useState(null); // Employee detail side-panel
   const [creatingConsultant, setCreatingConsultant] = useState(false); // Creating employee status
   const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of consultant card menu open
   const [viewingInvoiceHistoryConsultant, setViewingInvoiceHistoryConsultant] = useState(null); // Consultant profile for invoice history panel
+  const [previewingFile, setPreviewingFile] = useState(null); // File name of the invoice currently being previewed
 
   // Custom Modal State
   const [modal, setModal] = useState({
@@ -91,14 +92,13 @@ export default function ConsultantConfiguration({
     const initials = getInitials(editingConsultant.firstname, editingConsultant.name);
     const updatedConsultant = { 
       ...editingConsultant, 
-      initials,
-      updatedAt: Date.now()
+      initials
     };
     
     if (creatingConsultant) {
-      setConsultants([...consultants, updatedConsultant]);
+      setConsultants([...consultants, { ...updatedConsultant, updatedAt: Date.now() }]);
     } else {
-      setConsultants(consultants.map(c => c.id === editingConsultant.id ? updatedConsultant : c));
+      updateConsultant(editingConsultant.id, updatedConsultant);
     }
     setEditingConsultant(null);
     setCreatingConsultant(false);
@@ -126,15 +126,8 @@ export default function ConsultantConfiguration({
 
   const handleAddCraConfirm = () => {
     if (!modal.craName.trim()) return;
-    setConsultants(prev => prev.map(c => {
-      if (c.id === modal.consultantId) {
-        return {
-          ...c,
-          cras: [...c.cras, { id: 'cra_' + Date.now(), name: modal.craName.trim(), validated: false }],
-          updatedAt: Date.now()
-        };
-      }
-      return c;
+    updateConsultant(modal.consultantId, (c) => ({
+      cras: [...c.cras, { id: 'cra_' + Date.now(), name: modal.craName.trim(), validated: false }]
     }));
     closeModal();
   };
@@ -160,15 +153,8 @@ export default function ConsultantConfiguration({
   };
 
   const handleDeleteCraConfirm = () => {
-    setConsultants(prev => prev.map(c => {
-      if (c.id === modal.consultantId) {
-        return {
-          ...c,
-          cras: c.cras.filter(cra => cra.id !== modal.targetId),
-          updatedAt: Date.now()
-        };
-      }
-      return c;
+    updateConsultant(modal.consultantId, (c) => ({
+      cras: c.cras.filter(cra => cra.id !== modal.targetId)
     }));
     closeModal();
   };
@@ -217,52 +203,49 @@ export default function ConsultantConfiguration({
 
   const handleSaveAssignmentDetail = () => {
     if (!modal.client.trim()) return;
-    setConsultants(prev => prev.map(c => {
-      if (c.id === modal.consultantId) {
-        const isEditing = !!modal.targetId;
-        const assId = isEditing ? modal.targetId : 'ass_' + Date.now();
-        
-        const newAssignment = {
-          id: assId,
-          client: modal.client.trim(),
-          startDate: modal.startDate || new Date().toISOString().split('T')[0],
-          endDate: modal.endDate || new Date().toISOString().split('T')[0]
-        };
-        
-        const existingClient = c.clients?.find(cli => cli.id === assId) || {};
-        const newClient = {
-          id: assId,
-          name: modal.client.trim(),
-          managerName: modal.managerName.trim(),
-          billingCycle: modal.billingCycle,
-          managerEmail: modal.managerEmail.trim(),
-          phone: modal.phone.trim(),
-          poNumber: modal.poNumber.trim(),
-          orderEndDate: modal.orderEndDate || new Date().toISOString().split('T')[0],
-          poUploaded: existingClient.poUploaded || false,
-          poFileName: existingClient.poFileName || "",
-          sent: existingClient.sent || false
-        };
-        
-        let newAssignments;
-        let newClients;
-        if (isEditing) {
-          newAssignments = c.assignments.map(ass => ass.id === assId ? newAssignment : ass);
-          newClients = c.clients ? c.clients.map(cli => cli.id === assId ? newClient : cli) : [newClient];
-        } else {
-          newAssignments = [...c.assignments, newAssignment];
-          newClients = c.clients ? [...c.clients, newClient] : [newClient];
-        }
-        
-        return {
-          ...c,
-          assignments: newAssignments,
-          clients: newClients,
-          updatedAt: Date.now()
-        };
+    
+    updateConsultant(modal.consultantId, (c) => {
+      const isEditing = !!modal.targetId;
+      const assId = isEditing ? modal.targetId : 'ass_' + Date.now();
+      
+      const newAssignment = {
+        id: assId,
+        client: modal.client.trim(),
+        startDate: modal.startDate || new Date().toISOString().split('T')[0],
+        endDate: modal.endDate || new Date().toISOString().split('T')[0]
+      };
+      
+      const existingClient = c.clients?.find(cli => cli.id === assId) || {};
+      const newClient = {
+        id: assId,
+        name: modal.client.trim(),
+        managerName: modal.managerName.trim(),
+        billingCycle: modal.billingCycle,
+        managerEmail: modal.managerEmail.trim(),
+        phone: modal.phone.trim(),
+        poNumber: modal.poNumber.trim(),
+        orderEndDate: modal.orderEndDate || new Date().toISOString().split('T')[0],
+        poUploaded: existingClient.poUploaded || false,
+        poFileName: existingClient.poFileName || "",
+        sent: existingClient.sent || false
+      };
+      
+      let newAssignments;
+      let newClients;
+      if (isEditing) {
+        newAssignments = c.assignments.map(ass => ass.id === assId ? newAssignment : ass);
+        newClients = c.clients ? c.clients.map(cli => cli.id === assId ? newClient : cli) : [newClient];
+      } else {
+        newAssignments = [...c.assignments, newAssignment];
+        newClients = c.clients ? [...c.clients, newClient] : [newClient];
       }
-      return c;
-    }));
+      
+      return {
+        assignments: newAssignments,
+        clients: newClients
+      };
+    });
+    
     closeModal();
   };
 
@@ -287,44 +270,35 @@ export default function ConsultantConfiguration({
   };
 
   const handleDeleteAssignmentConfirm = () => {
-    setConsultants(prev => prev.map(c => {
-      if (c.id === modal.consultantId) {
-        const newAssignments = c.assignments.filter(ass => ass.id !== modal.targetId);
-        const newClients = c.clients ? c.clients.filter(cli => cli.id !== modal.targetId) : [];
-        return {
-          ...c,
-          assignments: newAssignments,
-          clients: newClients,
-          updatedAt: Date.now()
-        };
-      }
-      return c;
-    }));
+    updateConsultant(modal.consultantId, (c) => {
+      const newAssignments = c.assignments.filter(ass => ass.id !== modal.targetId);
+      const newClients = c.clients ? c.clients.filter(cli => cli.id !== modal.targetId) : [];
+      return {
+        assignments: newAssignments,
+        clients: newClients
+      };
+    });
     closeModal();
   };
 
   const editAssignment = (consultantId, assId, field, value) => {
-    setConsultants(prev => prev.map(c => {
-      if (c.id === consultantId) {
-        const newAssignments = c.assignments.map(ass => ass.id === assId ? { ...ass, [field]: value } : ass);
-        const newClients = c.clients ? c.clients.map(cli => {
-          if (cli.id === assId) {
-            return {
-              ...cli,
-              name: field === 'client' ? value : cli.name
-            };
-          }
-          return cli;
-        }) : [];
-        return {
-          ...c,
-          assignments: newAssignments,
-          clients: newClients,
-          updatedAt: Date.now()
-        };
-      }
-      return c;
-    }));
+    updateConsultant(consultantId, (c) => {
+      const newAssignments = c.assignments.map(ass => ass.id === assId ? { ...ass, [field]: value } : ass);
+      const newClients = c.clients ? c.clients.map(cli => {
+        if (cli.id === assId) {
+          return {
+            ...cli,
+            name: field === 'client' ? value : cli.name
+          };
+        }
+        return cli;
+      }) : [];
+      
+      return {
+        assignments: newAssignments,
+        clients: newClients
+      };
+    });
   };
 
   return (
@@ -346,146 +320,153 @@ export default function ConsultantConfiguration({
       </div>
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        {filteredConsultants.map(consultant => (
-          <div key={consultant.id} className="card" style={{ width: '380px' }}>
-            <div className="card-header">
-              <div className="flex items-center gap-4">
-                <div className="avatar avatar-lg">{consultant.initials}</div>
-                <div>
-                  <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>
-                    {consultant.firstname} {consultant.name}
-                  </h3>
-                  <p className="m-0 text-sm text-muted">{consultant.role}</p>
+        {filteredConsultants.map(consultant => {
+          const hasHistory = consultant.history && consultant.history.length > 0;
+          return (
+            <div key={consultant.id} className="card" style={{ width: '380px' }}>
+              <div className="card-header">
+                <div className="flex items-center gap-4">
+                  <div className="avatar avatar-lg">{consultant.initials}</div>
+                  <div>
+                    <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>
+                      {consultant.firstname} {consultant.name}
+                    </h3>
+                    <p className="m-0 text-sm text-muted">{consultant.role}</p>
+                  </div>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <MoreHorizontal 
+                    className="text-light cursor-pointer hover:text-primary" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveCardMenu(activeCardMenu === consultant.id ? null : consultant.id);
+                    }}
+                  />
+                  {activeCardMenu === consultant.id && (
+                    <>
+                      <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
+                      <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
+                        <button className="dropdown-item" onClick={() => { setEditingConsultant(consultant); setActiveCardMenu(null); }}>
+                          👤 Employee Details
+                        </button>
+                        <button className="dropdown-item" onClick={() => { setViewingInvoiceHistoryConsultant(consultant); setActiveCardMenu(null); }}>
+                          📄 Invoice History
+                        </button>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={() => { handleUndo(consultant.id); setActiveCardMenu(null); }} 
+                          disabled={!hasHistory}
+                        >
+                          ↩ Undo Last Action
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-              <div style={{ position: 'relative' }}>
-                <MoreHorizontal 
-                  className="text-light cursor-pointer hover:text-primary" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveCardMenu(activeCardMenu === consultant.id ? null : consultant.id);
-                  }}
-                />
-                {activeCardMenu === consultant.id && (
-                  <>
-                    <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
-                    <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
-                      <button className="dropdown-item" onClick={() => { setEditingConsultant(consultant); setActiveCardMenu(null); }}>
-                        👤 Employee Details
-                      </button>
-                      <button className="dropdown-item" onClick={() => { setViewingInvoiceHistoryConsultant(consultant); setActiveCardMenu(null); }}>
-                        📄 Invoice History
-                      </button>
-                      <button className="dropdown-item" onClick={() => { handleUndo(); setActiveCardMenu(null); }} disabled={!canUndo}>
-                        ↩ Undo Last Action
-                      </button>
+
+              <div className="card-body">
+                {/* CRA CONFIGURATION */}
+                <div className="flex justify-between items-center mb-4">
+                  <span className="form-label m-0">CRA CONFIGURATION</span>
+                  <button className="btn btn-text text-sm" onClick={() => openAddCraModal(consultant.id)}>+ Add Type</button>
+                </div>
+
+                <div className="mb-6">
+                  {consultant.cras.map(cra => (
+                    <div key={cra.id} className="flex justify-between items-center p-2 mb-2 bg-slate-50 border border-slate-200 rounded-md">
+                      <span className="text-sm font-medium">{cra.name}</span>
+                      <Trash2 
+                        size={16} 
+                        className="text-red-400 cursor-pointer hover:text-red-600" 
+                        onClick={() => openDeleteCraModal(consultant.id, cra.id)}
+                      />
                     </div>
-                  </>
+                  ))}
+                  {consultant.cras.length === 0 && <div className="text-xs text-muted">No CRAs configured.</div>}
+                </div>
+
+                {/* ACTIVE ASSIGNMENTS */}
+                <div className="flex justify-between items-center mb-4">
+                  <span className="form-label m-0" style={{ letterSpacing: '0.05em' }}>ACTIVE ASSIGNMENTS</span>
+                  <button className="btn-assign" onClick={() => openAddAssignmentModal(consultant.id)}>
+                    <PlusCircle size={13} /> Assign
+                  </button>
+                </div>
+
+                {consultant.assignments.length > 0 ? (
+                  <div className="assignments-box">
+                    <table className="assignments-table">
+                      <thead>
+                        <tr>
+                          <th>Client</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {consultant.assignments.map(ass => (
+                          <tr key={ass.id}>
+                            <td className="client-cell">
+                              <input 
+                                type="text" 
+                                className={`client-input ${ass.client.toLowerCase().includes('new client') ? 'new-client' : ''}`}
+                                value={ass.client}
+                                onChange={(e) => editAssignment(consultant.id, ass.id, 'client', e.target.value)}
+                              />
+                            </td>
+                            <td className="date-cell">
+                              <input 
+                                type="date" 
+                                className="date-pill-input"
+                                value={ass.startDate}
+                                onChange={(e) => editAssignment(consultant.id, ass.id, 'startDate', e.target.value)}
+                              />
+                            </td>
+                            <td className="date-cell">
+                              <input 
+                                type="date" 
+                                className="date-pill-input"
+                                value={ass.endDate}
+                                onChange={(e) => editAssignment(consultant.id, ass.id, 'endDate', e.target.value)}
+                              />
+                            </td>
+                            <td className="action-cell">
+                              <div className="flex gap-1 justify-end">
+                                <button 
+                                  className="edit-row-btn"
+                                  title="Edit Client & Assignment Details"
+                                  onClick={() => openEditAssignmentModal(consultant, ass)}
+                                >
+                                  ✏️
+                                </button>
+                                <button 
+                                  className="delete-row-btn"
+                                  title="Delete Assignment"
+                                  onClick={() => openDeleteAssignmentModal(consultant.id, ass.id)}
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
+                    <div className="text-xs font-bold text-muted mb-3 uppercase">NO ACTIVE ASSIGNMENTS</div>
+                    <button className="btn btn-primary text-sm" onClick={() => openAddAssignmentModal(consultant.id)}>
+                      <PlusCircle size={14} /> Assign to Project
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
-
-            <div className="card-body">
-              {/* CRA CONFIGURATION */}
-              <div className="flex justify-between items-center mb-4">
-                <span className="form-label m-0">CRA CONFIGURATION</span>
-                <button className="btn btn-text text-sm" onClick={() => openAddCraModal(consultant.id)}>+ Add Type</button>
-              </div>
-
-              <div className="mb-6">
-                {consultant.cras.map(cra => (
-                  <div key={cra.id} className="flex justify-between items-center p-2 mb-2 bg-slate-50 border border-slate-200 rounded-md">
-                    <span className="text-sm font-medium">{cra.name}</span>
-                    <Trash2 
-                      size={16} 
-                      className="text-red-400 cursor-pointer hover:text-red-600" 
-                      onClick={() => openDeleteCraModal(consultant.id, cra.id)}
-                    />
-                  </div>
-                ))}
-                {consultant.cras.length === 0 && <div className="text-xs text-muted">No CRAs configured.</div>}
-              </div>
-
-              {/* ACTIVE ASSIGNMENTS */}
-              <div className="flex justify-between items-center mb-4">
-                <span className="form-label m-0" style={{ letterSpacing: '0.05em' }}>ACTIVE ASSIGNMENTS</span>
-                <button className="btn-assign" onClick={() => openAddAssignmentModal(consultant.id)}>
-                  <PlusCircle size={13} /> Assign
-                </button>
-              </div>
-
-              {consultant.assignments.length > 0 ? (
-                <div className="assignments-box">
-                  <table className="assignments-table">
-                    <thead>
-                      <tr>
-                        <th>Client</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {consultant.assignments.map(ass => (
-                        <tr key={ass.id}>
-                          <td className="client-cell">
-                            <input 
-                              type="text" 
-                              className={`client-input ${ass.client.toLowerCase().includes('new client') ? 'new-client' : ''}`}
-                              value={ass.client}
-                              onChange={(e) => editAssignment(consultant.id, ass.id, 'client', e.target.value)}
-                            />
-                          </td>
-                          <td className="date-cell">
-                            <input 
-                              type="date" 
-                              className="date-pill-input"
-                              value={ass.startDate}
-                              onChange={(e) => editAssignment(consultant.id, ass.id, 'startDate', e.target.value)}
-                            />
-                          </td>
-                          <td className="date-cell">
-                            <input 
-                              type="date" 
-                              className="date-pill-input"
-                              value={ass.endDate}
-                              onChange={(e) => editAssignment(consultant.id, ass.id, 'endDate', e.target.value)}
-                            />
-                          </td>
-                          <td className="action-cell">
-                            <div className="flex gap-1 justify-end">
-                              <button 
-                                className="edit-row-btn"
-                                title="Edit Client & Assignment Details"
-                                onClick={() => openEditAssignmentModal(consultant, ass)}
-                              >
-                                ✏️
-                              </button>
-                              <button 
-                                className="delete-row-btn"
-                                title="Delete Assignment"
-                                onClick={() => openDeleteAssignmentModal(consultant.id, ass.id)}
-                              >
-                                &times;
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
-                  <div className="text-xs font-bold text-muted mb-3 uppercase">NO ACTIVE ASSIGNMENTS</div>
-                  <button className="btn btn-primary text-sm" onClick={() => openAddAssignmentModal(consultant.id)}>
-                    <PlusCircle size={14} /> Assign to Project
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Détail Employé Side Panel */}
@@ -619,13 +600,37 @@ export default function ConsultantConfiguration({
                         <div><strong>Manager Email:</strong> {cli.managerEmail || "N/A"}</div>
                         <div><strong>Phone Number:</strong> {cli.phone || "N/A"}</div>
                         <div><strong>Order End Date:</strong> {cli.orderEndDate || "N/A"}</div>
+                        
+                        {/* Fictive invoice attachment */}
+                        <div className="mt-2 flex items-center justify-between p-2 bg-slate-100 rounded-md border border-slate-200">
+                          <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
+                            <span style={{ fontSize: '1rem' }}>📎</span>
+                            <span className="font-semibold text-slate-700 text-ellipsis overflow-hidden whitespace-nowrap">Facture_{cli.name.replace(/\s+/g, '')}_2026.pdf</span>
+                          </div>
+                          <button 
+                            className="btn btn-outline p-1" 
+                            style={{ padding: '4px', minWidth: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}
+                            title="Ouvrir la pièce jointe de la facture"
+                            onClick={() => setPreviewingFile(`Facture_${cli.name.replace(/\s+/g, '')}_2026.pdf`)}
+                          >
+                            <Eye size={12} />
+                          </button>
+                        </div>
+
                         {cli.poUploaded ? (
-                          <div className="mt-3 p-3 bg-white border border-slate-200 rounded-md flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                          <div className="mt-2 p-3 bg-white border border-slate-200 rounded-md flex items-center justify-between">
+                            <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
                               <span style={{ fontSize: '1.25rem' }}>📄</span>
-                              <span className="font-medium text-slate-700">{cli.poFileName || "purchase_order.pdf"}</span>
+                              <span className="font-medium text-slate-700 text-ellipsis overflow-hidden whitespace-nowrap">{cli.poFileName || "purchase_order.pdf"}</span>
                             </div>
-                            <span className="text-success-color font-semibold">✓ Linked</span>
+                            <button 
+                              className="btn btn-outline p-1" 
+                              style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title="Open Document Preview"
+                              onClick={() => setPreviewingFile(cli.poFileName || "purchase_order.pdf")}
+                            >
+                              <Eye size={14} />
+                            </button>
                           </div>
                         ) : (
                           <div className="mt-2 text-red-500 font-medium">⚠️ Purchase Order Pending Upload</div>
@@ -642,6 +647,108 @@ export default function ConsultantConfiguration({
             </div>
           </div>
         </>
+      )}
+
+      {/* Mock Document Preview Modal */}
+      {previewingFile && (
+        <div className="modal-overlay" onClick={() => setPreviewingFile(null)}>
+          <div className="modal-container" style={{ maxWidth: '600px', backgroundColor: '#F8FAFC' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ backgroundColor: '#ffffff' }}>
+              <h3 className="modal-title flex items-center gap-2">
+                <span>📄</span> Document Preview: {previewingFile}
+              </h3>
+              <button className="btn-text text-light text-xl" onClick={() => setPreviewingFile(null)}>&times;</button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '2rem' }}>
+              {/* Document Sheet layout */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                padding: '2.5rem',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                fontFamily: 'Courier New, Courier, monospace',
+                position: 'relative'
+              }}>
+                {/* Draft watermark */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%) rotate(-30deg)',
+                  fontSize: '3rem',
+                  fontWeight: 900,
+                  color: 'rgba(239, 68, 68, 0.08)',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap'
+                }}>
+                  ACEO DOCUMENT PREVIEW
+                </div>
+
+                <div className="flex justify-between items-center mb-6" style={{ borderBottom: '2px solid #262E52', paddingBottom: '1rem' }}>
+                  <div>
+                    <h2 style={{ color: '#262E52', margin: 0, fontWeight: 700, fontFamily: 'sans-serif' }}>ACEO</h2>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontFamily: 'sans-serif' }}>Timesheet & Billing Portal</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: 0, fontWeight: 'bold' }}>{previewingFile.toLowerCase().includes('facture') ? 'INVOICE / FACTURE' : 'PURCHASE ORDER'}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem' }}>No: {viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile)?.poNumber || "VE-2024-MAINT"}</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between mb-6" style={{ fontSize: '0.8rem' }}>
+                  <div>
+                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>From:</p>
+                    <p style={{ margin: 0 }}>ACEO SAS</p>
+                    <p style={{ margin: 0 }}>12 Rue de la Paix</p>
+                    <p style={{ margin: 0 }}>75002 Paris, France</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>To:</p>
+                    <p style={{ margin: 0 }}>{viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile)?.name || "Veolia"}</p>
+                    <p style={{ margin: 0 }}>Manager: {viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile)?.managerName || "Jean-Pierre Lambert"}</p>
+                  </div>
+                </div>
+
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginTop: '1.5rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #CBD5E1', textAlign: 'left' }}>
+                      <th style={{ padding: '8px 0' }}>Description</th>
+                      <th style={{ padding: '8px 0', textAlign: 'center' }}>Qty</th>
+                      <th style={{ padding: '8px 0', textAlign: 'right' }}>Rate</th>
+                      <th style={{ padding: '8px 0', textAlign: 'right' }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                      <td style={{ padding: '8px 0' }}>Prestation Conseil - {viewingInvoiceHistoryConsultant?.role}</td>
+                      <td style={{ padding: '8px 0', textAlign: 'center' }}>20 days</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>650.00 €</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>13,000.00 €</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '8px 0' }}>Frais de déplacement client</td>
+                      <td style={{ padding: '8px 0', textAlign: 'center' }}>1</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>240.00 €</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>240.00 €</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div style={{ borderTop: '2px solid #E2E8F0', marginTop: '1.5rem', paddingTop: '1rem', textAlign: 'right', fontSize: '0.85rem' }}>
+                  <p style={{ margin: '0 0 4px 0' }}>Subtotal: 13,240.00 €</p>
+                  <p style={{ margin: '0 0 4px 0' }}>VAT (20%): 2,648.00 €</p>
+                  <h3 style={{ margin: 0, color: '#262E52', fontWeight: 'bold' }}>Total: 15,888.00 €</h3>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer" style={{ backgroundColor: '#ffffff' }}>
+              <button className="btn btn-primary" onClick={() => setPreviewingFile(null)}>Close Preview</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Reusable Custom Modal */}

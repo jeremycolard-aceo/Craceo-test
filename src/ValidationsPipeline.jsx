@@ -17,6 +17,7 @@ const formatTimeAgo = (timestamp) => {
 export default function ValidationsPipeline({ 
   consultants, 
   setConsultants, 
+  updateConsultant,
   filteredConsultants, 
   onOpenFilter,
   handleUndo,
@@ -81,18 +82,10 @@ export default function ValidationsPipeline({
 
   const handleSaveChanges = () => {
     if (selectedConsultant && selectedClient) {
-      setConsultants(prev => prev.map(c => {
-        if (c.id === selectedConsultant.id) {
-          const updatedClients = c.clients.map(cli => 
-            cli.id === selectedClient.id ? selectedClient : cli
-          );
-          return {
-            ...c,
-            clients: updatedClients,
-            updatedAt: Date.now()
-          };
-        }
-        return c;
+      updateConsultant(selectedConsultant.id, (c) => ({
+        clients: c.clients.map(cli => 
+          cli.id === selectedClient.id ? selectedClient : cli
+        )
       }));
     }
     closePanel();
@@ -100,25 +93,14 @@ export default function ValidationsPipeline({
 
   const handleMarkAsSend = () => {
     if (selectedConsultant && selectedClient) {
-      // Set sent to true locally
       const updatedClient = {
         ...selectedClient,
         sent: true
       };
-      
-      // Update globally
-      setConsultants(prev => prev.map(c => {
-        if (c.id === selectedConsultant.id) {
-          const updatedClients = c.clients.map(cli => 
-            cli.id === selectedClient.id ? updatedClient : cli
-          );
-          return {
-            ...c,
-            clients: updatedClients,
-            updatedAt: Date.now()
-          };
-        }
-        return c;
+      updateConsultant(selectedConsultant.id, (c) => ({
+        clients: c.clients.map(cli => 
+          cli.id === selectedClient.id ? updatedClient : cli
+        )
       }));
     }
     closePanel();
@@ -126,17 +108,10 @@ export default function ValidationsPipeline({
 
   // Toggle CRA validation status
   const toggleCRAValidation = (consultantId, craId) => {
-    setConsultants(prev => prev.map(c => {
-      if (c.id === consultantId) {
-        return {
-          ...c,
-          cras: c.cras.map(cra => 
-            cra.id === craId ? { ...cra, validated: !cra.validated } : cra
-          ),
-          updatedAt: Date.now()
-        };
-      }
-      return c;
+    updateConsultant(consultantId, (c) => ({
+      cras: c.cras.map(cra => 
+        cra.id === craId ? { ...cra, validated: !cra.validated } : cra
+      )
     }));
   };
 
@@ -150,9 +125,7 @@ export default function ValidationsPipeline({
 
   const handleValidateConfirm = () => {
     if (validationModal.consultant) {
-      setConsultants(prev => prev.map(c => 
-        c.id === validationModal.consultant.id ? { ...c, archived: true, updatedAt: Date.now() } : c
-      ));
+      updateConsultant(validationModal.consultant.id, { archived: true });
     }
     setValidationModal({ isOpen: false, consultant: null });
   };
@@ -214,12 +187,16 @@ export default function ValidationsPipeline({
                   />
                   {activeCardMenu === c.id && (
                     <>
-                      <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
+                      <div className="dropdown-overlay" onClick={(e) => { e.stopPropagation(); setActiveCardMenu(null); }}></div>
                       <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
                         <button 
                           className="dropdown-item" 
-                          onClick={() => { handleUndo(); setActiveCardMenu(null); }}
-                          disabled={!canUndo}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleUndo(c.id); 
+                            setActiveCardMenu(null); 
+                          }}
+                          disabled={!c.history || c.history.length === 0}
                         >
                           ↩ Undo Last Action
                         </button>
@@ -270,12 +247,16 @@ export default function ValidationsPipeline({
                   />
                   {activeCardMenu === c.id && (
                     <>
-                      <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
+                      <div className="dropdown-overlay" onClick={(e) => { e.stopPropagation(); setActiveCardMenu(null); }}></div>
                       <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
                         <button 
                           className="dropdown-item" 
-                          onClick={() => { handleUndo(); setActiveCardMenu(null); }}
-                          disabled={!canUndo}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleUndo(c.id); 
+                            setActiveCardMenu(null); 
+                          }}
+                          disabled={!c.history || c.history.length === 0}
                         >
                           ↩ Undo Last Action
                         </button>
@@ -334,10 +315,38 @@ export default function ValidationsPipeline({
                 className="kanban-card validation-ready"
                 onClick={() => handleCardClick(c)}
                 title="Click to validate definitively"
+                style={{ position: 'relative' }}
               >
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-3" style={{ position: 'relative' }}>
                   <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>{c.firstname} {c.name}</h3>
-                  <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)' }}>Ready</span>
+                  <div className="flex items-center gap-2">
+                    <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)' }}>Ready</span>
+                    <MoreHorizontal 
+                      className="text-light cursor-pointer hover:text-primary" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveCardMenu(activeCardMenu === c.id ? null : c.id);
+                      }} 
+                    />
+                  </div>
+                  {activeCardMenu === c.id && (
+                    <>
+                      <div className="dropdown-overlay" onClick={(e) => { e.stopPropagation(); setActiveCardMenu(null); }}></div>
+                      <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleUndo(c.id); 
+                            setActiveCardMenu(null); 
+                          }}
+                          disabled={!c.history || c.history.length === 0}
+                        >
+                          ↩ Undo Last Action
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 <div className="text-xs text-muted mb-3">
@@ -523,8 +532,8 @@ export default function ValidationsPipeline({
               <button 
                 className="btn w-full p-4" 
                 style={{ 
-                  backgroundColor: selectedClient.sent ? 'var(--success-color)' : '#ECEFF4', 
-                  color: selectedClient.sent ? '#FFFFFF' : 'var(--primary-color)',
+                  backgroundColor: selectedClient.sent ? 'var(--success-color)' : '#F97316', 
+                  color: '#FFFFFF',
                   fontWeight: 600,
                   border: 'none',
                   display: 'flex',

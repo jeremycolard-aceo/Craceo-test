@@ -24,30 +24,67 @@ function App() {
     cra: []
   });
 
-  // State and Undo History initialization
-  const [history, setHistory] = useState([]);
+  // Toast notifications for undos
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // In-memory consultants database state
   const [consultants, setConsultantsState] = useState(mockConsultants);
 
-  const setConsultants = (newVal) => {
-    setConsultantsState(prev => {
-      const nextVal = typeof newVal === 'function' ? newVal(prev) : newVal;
-      // Push copy of previous state to history if different
-      if (JSON.stringify(prev) !== JSON.stringify(nextVal)) {
-        setHistory(h => [...h, prev]);
+  // Undo action for a specific consultant
+  const handleUndo = (consultantId) => {
+    setConsultantsState(prev => prev.map(c => {
+      if (c.id === consultantId) {
+        if (!c.history || c.history.length === 0) return c;
+        const lastState = c.history[c.history.length - 1];
+        const remainingHistory = c.history.slice(0, -1);
+        return {
+          ...lastState,
+          history: remainingHistory,
+          updatedAt: Date.now()
+        };
       }
-      return nextVal;
-    });
+      return c;
+    }));
   };
 
-  const handleUndo = () => {
-    if (history.length === 0) return;
-    const previousState = history[history.length - 1];
-    setHistory(history.slice(0, -1));
-    setConsultantsState(previousState);
+  // Centralized update function that logs history per consultant
+  const updateConsultant = (consultantId, updatedFieldsOrFn) => {
+    setConsultantsState(prev => prev.map(c => {
+      if (c.id === consultantId) {
+        const updatedFields = typeof updatedFieldsOrFn === 'function' ? updatedFieldsOrFn(c) : updatedFieldsOrFn;
+        
+        // Push current state to this consultant's local history (stripping previous history references)
+        const { history: _, ...snapshot } = c;
+        const newHistory = c.history ? [...c.history, snapshot] : [snapshot];
+        
+        // Show undo toast if we are archiving a card
+        if (updatedFields.archived === true) {
+          setToast({
+            message: `${c.firstname} ${c.name} has been validated and archived.`,
+            consultantId: c.id
+          });
+        }
+
+        return {
+          ...c,
+          ...updatedFields,
+          history: newHistory,
+          updatedAt: Date.now()
+        };
+      }
+      return c;
+    }));
   };
 
   const handleReset = () => {
-    setHistory([]);
+    setToast(null);
     setConsultantsState(mockConsultants);
   };
 
@@ -112,21 +149,21 @@ function App() {
           {currentView === 'consultants' && (
             <ConsultantConfiguration 
               consultants={consultants} 
-              setConsultants={setConsultants} 
+              setConsultants={setConsultantsState} 
+              updateConsultant={updateConsultant}
               filteredConsultants={filteredConsultants}
               onOpenFilter={() => setIsFilterOpen(true)}
               handleUndo={handleUndo}
-              canUndo={history.length > 0}
             />
           )}
           {currentView === 'validations' && (
             <ValidationsPipeline 
               consultants={consultants} 
-              setConsultants={setConsultants} 
+              setConsultants={setConsultantsState} 
+              updateConsultant={updateConsultant}
               filteredConsultants={filteredConsultants}
               onOpenFilter={() => setIsFilterOpen(true)}
               handleUndo={handleUndo}
-              canUndo={history.length > 0}
             />
           )}
         </div>
@@ -139,6 +176,25 @@ function App() {
         activeFilters={activeFilters}
         setActiveFilters={setActiveFilters}
       />
+
+      {toast && (
+        <div className="toast-container">
+          <div className="toast">
+            <span>{toast.message}</span>
+            {toast.consultantId && (
+              <button 
+                className="toast-action-btn"
+                onClick={() => {
+                  handleUndo(toast.consultantId);
+                  setToast(null);
+                }}
+              >
+                UNDO
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
