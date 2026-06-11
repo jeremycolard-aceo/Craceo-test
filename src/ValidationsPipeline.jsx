@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MoreHorizontal, Paperclip, Save, FileText, Send } from 'lucide-react';
+import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye } from 'lucide-react';
 
 // Relative time formatter helper
 const formatTimeAgo = (timestamp) => {
@@ -43,6 +43,7 @@ export default function ValidationsPipeline({
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [validationModal, setValidationModal] = useState({ isOpen: false, consultant: null });
   const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of active 3-dots menu
+  const [previewingFile, setPreviewingFile] = useState(null); // Document preview state
 
   // Force re-renders for live relative time updates
   const [tick, setTick] = useState(0);
@@ -68,11 +69,12 @@ export default function ValidationsPipeline({
     }));
   };
 
-  const updateClientPO = (poUploaded, fileName = "") => {
+  const updateClientPO = (poUploaded, fileName = "", fileUrl = "") => {
     setSelectedClient(prev => ({
       ...prev,
       poUploaded,
-      poFileName: fileName
+      poFileName: fileName,
+      poFileUrl: fileUrl
     }));
   };
 
@@ -82,16 +84,18 @@ export default function ValidationsPipeline({
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      updateClientPO(true, file.name);
+      const fileUrl = URL.createObjectURL(file);
+      updateClientPO(true, file.name, fileUrl);
     } else {
-      updateClientPO(true, "invoice_po.pdf");
+      updateClientPO(true, "invoice_po.pdf", "");
     }
   };
 
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      updateClientPO(true, file.name);
+      const fileUrl = URL.createObjectURL(file);
+      updateClientPO(true, file.name, fileUrl);
     }
   };
 
@@ -273,7 +277,7 @@ export default function ValidationsPipeline({
         {/* Column 2: Billing */}
         <div className="kanban-column">
           <div className="kanban-header">
-            <span style={{ color: 'var(--accent-color)' }}>●</span> Facturation
+            <span style={{ color: 'var(--accent-color)' }}>●</span> Billing
           </div>
           <div className="kanban-cards">
             {billingConsultants.map(c => (
@@ -587,6 +591,43 @@ export default function ValidationsPipeline({
                             <div className="text-xs text-success-color font-medium">✓ Uploaded & Linked</div>
                           </div>
                           <button 
+                            className="btn btn-outline p-1" 
+                            style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px' }}
+                            title="Preview Document"
+                            onClick={() => setPreviewingFile(selectedClient.poFileName || "purchase_order.pdf")}
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button 
+                            className="btn btn-outline p-1" 
+                            style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px' }}
+                            title="Download Document"
+                            onClick={() => {
+                              const fileName = selectedClient.poFileName || "purchase_order.pdf";
+                              const fileUrl = selectedClient.poFileUrl;
+                              if (fileUrl) {
+                                const a = document.createElement('a');
+                                a.href = fileUrl;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              } else {
+                                const blob = new Blob(["Mock Invoice/PO File Content for " + fileName], { type: "text/plain" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                              }
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                          </button>
+                          <button 
                             className="btn-delete-file"
                             onClick={() => updateClientPO(false, "")}
                           >
@@ -689,6 +730,135 @@ export default function ValidationsPipeline({
               >
                 Validate & Archive
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mock Document Preview Modal */}
+      {previewingFile && (
+        <div className="modal-overlay" onClick={() => setPreviewingFile(null)} style={{ zIndex: 1100 }}>
+          <div className="modal-container" style={{ maxWidth: '600px', backgroundColor: '#F8FAFC' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ backgroundColor: '#ffffff' }}>
+              <h3 className="modal-title flex items-center gap-2">
+                <span>📄</span> Document Preview: {previewingFile}
+              </h3>
+              <button className="btn-text text-light text-xl" onClick={() => setPreviewingFile(null)}>&times;</button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '2rem' }}>
+              {/* Document Sheet layout */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                padding: '2.5rem',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                fontFamily: 'Courier New, Courier, monospace',
+                position: 'relative'
+              }}>
+                {/* Draft watermark */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%) rotate(-30deg)',
+                  fontSize: '3rem',
+                  fontWeight: 900,
+                  color: 'rgba(239, 68, 68, 0.08)',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap'
+                }}>
+                  ACEO DOCUMENT PREVIEW
+                </div>
+
+                <div className="flex justify-between items-center mb-6" style={{ borderBottom: '2px solid #262E52', paddingBottom: '1rem' }}>
+                  <div>
+                    <h2 style={{ color: '#262E52', margin: 0, fontWeight: 700, fontFamily: 'sans-serif' }}>ACEO</h2>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontFamily: 'sans-serif' }}>Timesheet & Billing Portal</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: 0, fontWeight: 'bold' }}>{previewingFile.toLowerCase().includes('facture') ? 'INVOICE / FACTURE' : 'PURCHASE ORDER'}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem' }}>No: {selectedConsultant?.clients?.find(c => c.poFileName === previewingFile)?.poNumber || "VE-2024-MAINT"}</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between mb-6" style={{ fontSize: '0.8rem' }}>
+                  <div>
+                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>From:</p>
+                    <p style={{ margin: 0 }}>ACEO SAS</p>
+                    <p style={{ margin: 0 }}>12 Rue de la Paix</p>
+                    <p style={{ margin: 0 }}>75002 Paris, France</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>To:</p>
+                    <p style={{ margin: 0 }}>{selectedClient?.name || "Veolia"}</p>
+                    <p style={{ margin: 0 }}>Manager: {selectedClient?.managerName || "Jean-Pierre Lambert"}</p>
+                  </div>
+                </div>
+
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginTop: '1.5rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #CBD5E1', textAlign: 'left' }}>
+                      <th style={{ padding: '8px 0' }}>Description</th>
+                      <th style={{ padding: '8px 0', textAlign: 'center' }}>Qty</th>
+                      <th style={{ padding: '8px 0', textAlign: 'right' }}>Rate</th>
+                      <th style={{ padding: '8px 0', textAlign: 'right' }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                      <td style={{ padding: '8px 0' }}>Prestation Conseil - {selectedConsultant?.role}</td>
+                      <td style={{ padding: '8px 0', textAlign: 'center' }}>20 days</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>650.00 €</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>13,000.00 €</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '8px 0' }}>Frais de déplacement client</td>
+                      <td style={{ padding: '8px 0', textAlign: 'center' }}>1</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>240.00 €</td>
+                      <td style={{ padding: '8px 0', textAlign: 'right' }}>240.00 €</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div style={{ borderTop: '2px solid #E2E8F0', marginTop: '1.5rem', paddingTop: '1rem', textAlign: 'right', fontSize: '0.85rem' }}>
+                  <p style={{ margin: '0 0 4px 0' }}>Subtotal: 13,240.00 €</p>
+                  <p style={{ margin: '0 0 4px 0' }}>VAT (20%): 2,648.00 €</p>
+                  <h3 style={{ margin: 0, color: '#262E52', fontWeight: 'bold' }}>Total: 15,888.00 €</h3>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer" style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button 
+                className="btn btn-outline"
+                onClick={() => {
+                  const fileName = selectedClient?.poFileName || previewingFile;
+                  const fileUrl = selectedClient?.poFileUrl;
+                  if (fileUrl) {
+                    const a = document.createElement('a');
+                    a.href = fileUrl;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  } else {
+                    const blob = new Blob(["Mock Invoice/PO File Content for " + fileName], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }
+                }}
+              >
+                Download File
+              </button>
+              <button className="btn btn-primary" onClick={() => setPreviewingFile(null)}>Close Preview</button>
             </div>
           </div>
         </div>

@@ -111,60 +111,7 @@ export default function ConsultantConfiguration({
     setCreatingConsultant(false);
   };
 
-  // Custom modals handlers
-  const openAddCraModal = (consultantId) => {
-    setModal({
-      isOpen: true,
-      type: 'addCra',
-      consultantId,
-      title: 'Add CRA Configuration',
-      craName: '',
-      client: '',
-      startDate: '',
-      endDate: '',
-      managerName: '',
-      billingCycle: 'Monthly',
-      managerEmail: '',
-      phone: '',
-      poNumber: '',
-      orderEndDate: ''
-    });
-  };
 
-  const handleAddCraConfirm = () => {
-    if (!modal.craName.trim()) return;
-    updateConsultant(modal.consultantId, (c) => ({
-      cras: [...c.cras, { id: 'cra_' + Date.now(), name: modal.craName.trim(), validated: false }]
-    }));
-    closeModal();
-  };
-
-  const openDeleteCraModal = (consultantId, craId) => {
-    setModal({
-      isOpen: true,
-      type: 'deleteCra',
-      consultantId,
-      targetId: craId,
-      title: 'Delete CRA Configuration',
-      craName: '',
-      client: '',
-      startDate: '',
-      endDate: '',
-      managerName: '',
-      billingCycle: 'Monthly',
-      managerEmail: '',
-      phone: '',
-      poNumber: '',
-      orderEndDate: ''
-    });
-  };
-
-  const handleDeleteCraConfirm = () => {
-    updateConsultant(modal.consultantId, (c) => ({
-      cras: c.cras.filter(cra => cra.id !== modal.targetId)
-    }));
-    closeModal();
-  };
 
   const openAddAssignmentModal = (consultantId) => {
     const today = new Date().toISOString().split('T')[0];
@@ -393,7 +340,6 @@ export default function ConsultantConfiguration({
                 {/* CRA CONFIGURATION */}
                 <div className="flex justify-between items-center mb-4">
                   <span className="form-label m-0">CRA CONFIGURATION</span>
-                  <button className="btn btn-text text-sm" onClick={() => openAddCraModal(consultant.id)}>+ Add Type</button>
                 </div>
 
                 <div className="mb-6">
@@ -606,14 +552,35 @@ export default function ConsultantConfiguration({
                             <span style={{ fontSize: '1rem' }}>📎</span>
                             <span className="font-semibold text-slate-700 text-ellipsis overflow-hidden whitespace-nowrap">Facture_{cli.name.replace(/\s+/g, '')}_2026.pdf</span>
                           </div>
-                          <button 
-                            className="btn btn-outline p-1" 
-                            style={{ padding: '4px', minWidth: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}
-                            title="Ouvrir la pièce jointe de la facture"
-                            onClick={() => setPreviewingFile(`Facture_${cli.name.replace(/\s+/g, '')}_2026.pdf`)}
-                          >
-                            <Eye size={12} />
-                          </button>
+                          <div className="flex gap-1">
+                            <button 
+                              className="btn btn-outline p-1" 
+                              style={{ padding: '4px', minWidth: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}
+                              title="Ouvrir la pièce jointe de la facture"
+                              onClick={() => setPreviewingFile(`Facture_${cli.name.replace(/\s+/g, '')}_2026.pdf`)}
+                            >
+                              <Eye size={12} />
+                            </button>
+                            <button 
+                              className="btn btn-outline p-1" 
+                              style={{ padding: '4px', minWidth: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}
+                              title="Download Invoice"
+                              onClick={() => {
+                                const fileName = `Facture_${cli.name.replace(/\s+/g, '')}_2026.pdf`;
+                                const blob = new Blob(["Mock Invoice File Content for " + fileName], { type: "text/plain" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            </button>
+                          </div>
                         </div>
 
                         {cli.poUploaded ? (
@@ -622,14 +589,45 @@ export default function ConsultantConfiguration({
                               <span style={{ fontSize: '1.25rem' }}>📄</span>
                               <span className="font-medium text-slate-700 text-ellipsis overflow-hidden whitespace-nowrap">{cli.poFileName || "purchase_order.pdf"}</span>
                             </div>
-                            <button 
-                              className="btn btn-outline p-1" 
-                              style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                              title="Open Document Preview"
-                              onClick={() => setPreviewingFile(cli.poFileName || "purchase_order.pdf")}
-                            >
-                              <Eye size={14} />
-                            </button>
+                            <div className="flex gap-1">
+                              <button 
+                                className="btn btn-outline p-1" 
+                                style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Open Document Preview"
+                                onClick={() => setPreviewingFile(cli.poFileName || "purchase_order.pdf")}
+                              >
+                                <Eye size={14} />
+                              </button>
+                              <button 
+                                className="btn btn-outline p-1" 
+                                style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Download Document"
+                                onClick={() => {
+                                  const fileName = cli.poFileName || "purchase_order.pdf";
+                                  const fileUrl = cli.poFileUrl;
+                                  if (fileUrl) {
+                                    const a = document.createElement('a');
+                                    a.href = fileUrl;
+                                    a.download = fileName;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                  } else {
+                                    const blob = new Blob(["Mock PO File Content for " + fileName], { type: "text/plain" });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = fileName;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(url);
+                                  }
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="mt-2 text-red-500 font-medium">⚠️ Purchase Order Pending Upload</div>
@@ -743,7 +741,35 @@ export default function ConsultantConfiguration({
               </div>
             </div>
             
-            <div className="modal-footer" style={{ backgroundColor: '#ffffff' }}>
+            <div className="modal-footer" style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button 
+                className="btn btn-outline"
+                onClick={() => {
+                  const client = viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile);
+                  const fileUrl = client?.poFileUrl;
+                  const fileName = previewingFile;
+                  if (fileUrl) {
+                    const a = document.createElement('a');
+                    a.href = fileUrl;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  } else {
+                    const blob = new Blob(["Mock Invoice/PO File Content for " + fileName], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }
+                }}
+              >
+                Download File
+              </button>
               <button className="btn btn-primary" onClick={() => setPreviewingFile(null)}>Close Preview</button>
             </div>
           </div>
@@ -760,27 +786,6 @@ export default function ConsultantConfiguration({
             </div>
             
             <div className="modal-body">
-              {modal.type === 'addCra' && (
-                <div className="form-group mb-0">
-                  <label className="form-label">CRA Name</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder="e.g. CRA INETUM" 
-                    value={modal.craName} 
-                    onChange={e => setModal({ ...modal, craName: e.target.value })}
-                    onKeyDown={e => e.key === 'Enter' && handleAddCraConfirm()}
-                    autoFocus
-                  />
-                </div>
-              )}
-              
-              {modal.type === 'deleteCra' && (
-                <p className="m-0 text-sm text-muted">
-                  Are you sure you want to delete this CRA configuration? This action cannot be undone.
-                </p>
-              )}
-              
               {modal.type === 'assignmentDetail' && (
                 <div className="flex flex-col gap-4">
                   <div className="flex gap-4">
@@ -902,12 +907,6 @@ export default function ConsultantConfiguration({
             
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={closeModal}>Cancel</button>
-              {modal.type === 'addCra' && (
-                <button className="btn btn-primary" onClick={handleAddCraConfirm}>Add CRA</button>
-              )}
-              {modal.type === 'deleteCra' && (
-                <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteCraConfirm}>Delete</button>
-              )}
               {modal.type === 'assignmentDetail' && (
                 <button className="btn btn-primary" onClick={handleSaveAssignmentDetail}>Save Details</button>
               )}
