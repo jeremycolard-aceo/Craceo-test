@@ -15,7 +15,7 @@ export const mockConsultants = [
     ],
     clients: [
       {
-        id: 'cli1',
+        id: 'ass1',
         name: "Veolia",
         managerName: "Jean-Pierre Lambert",
         billingCycle: "Monthly",
@@ -24,7 +24,8 @@ export const mockConsultants = [
         poNumber: "VE-2024-MAINT-FR-004",
         orderEndDate: "2024-12-31",
         poUploaded: false,
-        poFileName: ""
+        poFileName: "",
+        sent: false
       }
     ],
     incomingDay: "2023-01-15",
@@ -36,7 +37,8 @@ export const mockConsultants = [
     mentor: "Sébastien Dubois",
     comments: "Senior Profile, key consultant for Veolia account.",
     status: "Active",
-    jobMailAceo: "n.sanchez@aceo.com"
+    jobMailAceo: "n.sanchez@aceo.com",
+    updatedAt: Date.now() - 3600000 * 2 // 2 hours ago
   },
   {
     id: 2,
@@ -52,7 +54,7 @@ export const mockConsultants = [
     ],
     clients: [
       {
-        id: 'cli3',
+        id: 'ass2',
         name: "Global Tech",
         managerName: "Luc Martin",
         billingCycle: "Monthly",
@@ -61,7 +63,8 @@ export const mockConsultants = [
         poNumber: "GT-2024-11",
         orderEndDate: "2025-10-31",
         poUploaded: false,
-        poFileName: ""
+        poFileName: "",
+        sent: false
       }
     ],
     incomingDay: "2024-03-01",
@@ -73,7 +76,8 @@ export const mockConsultants = [
     mentor: "Nicolas Sanchez",
     comments: "Leads key operations for Global Tech.",
     status: "Active",
-    jobMailAceo: "g.duluc@aceo.com"
+    jobMailAceo: "g.duluc@aceo.com",
+    updatedAt: Date.now() - 3600000 * 24 // 24 hours ago (Yesterday)
   },
   {
     id: 3,
@@ -96,7 +100,8 @@ export const mockConsultants = [
     mentor: "Guillaume Duluc",
     comments: "Expert in Kubernetes and Cloud infrastructures.",
     status: "Active",
-    jobMailAceo: "q.astarie@aceo.com"
+    jobMailAceo: "q.astarie@aceo.com",
+    updatedAt: Date.now() - 60000 // 1 minute ago
   }
 ];
 

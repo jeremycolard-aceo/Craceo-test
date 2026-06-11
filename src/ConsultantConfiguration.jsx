@@ -1,50 +1,42 @@
 import React, { useState } from 'react';
 import { MoreHorizontal, PlusCircle, Trash2, X, Save } from 'lucide-react';
 
-// Sync clients billing record array when assignments are modified
-const syncClientsWithAssignments = (assignments, existingClients) => {
-  return assignments.map(ass => {
-    const existing = existingClients.find(c => c.name.toLowerCase() === ass.client.toLowerCase());
-    if (existing) {
-      return { ...existing, name: ass.client };
-    } else {
-      return {
-        id: 'cli_' + Date.now() + Math.random().toString(36).substring(2, 5),
-        name: ass.client,
-        managerName: "",
-        billingCycle: "Monthly",
-        managerEmail: "",
-        phone: "",
-        poNumber: "",
-        orderEndDate: "",
-        poUploaded: false,
-        poFileName: ""
-      };
-    }
-  });
-};
-
 const getInitials = (firstname, lastname) => {
   const f = firstname ? firstname.charAt(0).toUpperCase() : "";
   const l = lastname ? lastname.charAt(0).toUpperCase() : "";
   return (f + l) || "NW";
 };
 
-export default function ConsultantConfiguration({ consultants, setConsultants, filteredConsultants, onOpenFilter }) {
+export default function ConsultantConfiguration({ 
+  consultants, 
+  setConsultants, 
+  filteredConsultants, 
+  onOpenFilter,
+  handleUndo,
+  canUndo 
+}) {
   const [editingConsultant, setEditingConsultant] = useState(null); // Employee detail side-panel
   const [creatingConsultant, setCreatingConsultant] = useState(false); // Creating employee status
-  
+  const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of consultant card menu open
+  const [viewingInvoiceHistoryConsultant, setViewingInvoiceHistoryConsultant] = useState(null); // Consultant profile for invoice history panel
+
   // Custom Modal State
   const [modal, setModal] = useState({
     isOpen: false,
-    type: '', // 'addCra' | 'deleteCra' | 'addAssignment' | 'deleteAssignment'
+    type: '', // 'addCra' | 'deleteCra' | 'assignmentDetail' | 'deleteAssignment'
     consultantId: null,
-    targetId: null,
+    targetId: null, // assignment id
     title: '',
     craName: '',
     client: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    managerName: '',
+    billingCycle: 'Monthly',
+    managerEmail: '',
+    phone: '',
+    poNumber: '',
+    orderEndDate: ''
   });
 
   const closeModal = () => {
@@ -57,7 +49,13 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       craName: '',
       client: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      phone: '',
+      poNumber: '',
+      orderEndDate: ''
     });
   };
 
@@ -82,7 +80,8 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       mentor: "",
       comments: "",
       status: "Active",
-      jobMailAceo: ""
+      jobMailAceo: "",
+      updatedAt: Date.now()
     };
     setEditingConsultant(newConsultant);
     setCreatingConsultant(true);
@@ -90,7 +89,11 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
 
   const saveConsultantDetails = () => {
     const initials = getInitials(editingConsultant.firstname, editingConsultant.name);
-    const updatedConsultant = { ...editingConsultant, initials };
+    const updatedConsultant = { 
+      ...editingConsultant, 
+      initials,
+      updatedAt: Date.now()
+    };
     
     if (creatingConsultant) {
       setConsultants([...consultants, updatedConsultant]);
@@ -111,7 +114,13 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       craName: '',
       client: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      phone: '',
+      poNumber: '',
+      orderEndDate: ''
     });
   };
 
@@ -121,7 +130,8 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       if (c.id === modal.consultantId) {
         return {
           ...c,
-          cras: [...c.cras, { id: 'cra_' + Date.now(), name: modal.craName.trim(), validated: false }]
+          cras: [...c.cras, { id: 'cra_' + Date.now(), name: modal.craName.trim(), validated: false }],
+          updatedAt: Date.now()
         };
       }
       return c;
@@ -139,7 +149,13 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       craName: '',
       client: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      phone: '',
+      poNumber: '',
+      orderEndDate: ''
     });
   };
 
@@ -148,7 +164,8 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       if (c.id === modal.consultantId) {
         return {
           ...c,
-          cras: c.cras.filter(cra => cra.id !== modal.targetId)
+          cras: c.cras.filter(cra => cra.id !== modal.targetId),
+          updatedAt: Date.now()
         };
       }
       return c;
@@ -157,34 +174,91 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
   };
 
   const openAddAssignmentModal = (consultantId) => {
+    const today = new Date().toISOString().split('T')[0];
     setModal({
       isOpen: true,
-      type: 'addAssignment',
+      type: 'assignmentDetail',
       consultantId,
-      title: 'Add New Assignment',
+      targetId: null,
+      title: 'Add New Assignment & Client Info',
       craName: '',
       client: '',
-      startDate: '',
-      endDate: ''
+      startDate: today,
+      endDate: today,
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      phone: '',
+      poNumber: '',
+      orderEndDate: today
     });
   };
 
-  const handleAddAssignmentConfirm = () => {
+  const openEditAssignmentModal = (consultant, ass) => {
+    const clientRecord = consultant.clients?.find(c => c.id === ass.id) || {};
+    setModal({
+      isOpen: true,
+      type: 'assignmentDetail',
+      consultantId: consultant.id,
+      targetId: ass.id,
+      title: 'Edit Assignment & Client Info',
+      craName: '',
+      client: ass.client || '',
+      startDate: ass.startDate || '',
+      endDate: ass.endDate || '',
+      managerName: clientRecord.managerName || '',
+      billingCycle: clientRecord.billingCycle || 'Monthly',
+      managerEmail: clientRecord.managerEmail || '',
+      phone: clientRecord.phone || '',
+      poNumber: clientRecord.poNumber || '',
+      orderEndDate: clientRecord.orderEndDate || ''
+    });
+  };
+
+  const handleSaveAssignmentDetail = () => {
     if (!modal.client.trim()) return;
     setConsultants(prev => prev.map(c => {
       if (c.id === modal.consultantId) {
+        const isEditing = !!modal.targetId;
+        const assId = isEditing ? modal.targetId : 'ass_' + Date.now();
+        
         const newAssignment = {
-          id: 'ass_' + Date.now(),
+          id: assId,
           client: modal.client.trim(),
-          startDate: modal.startDate.trim() || new Date().toISOString().split('T')[0],
-          endDate: modal.endDate.trim() || new Date().toISOString().split('T')[0]
+          startDate: modal.startDate || new Date().toISOString().split('T')[0],
+          endDate: modal.endDate || new Date().toISOString().split('T')[0]
         };
-        const newAssignments = [...c.assignments, newAssignment];
-        const updatedClients = syncClientsWithAssignments(newAssignments, c.clients || []);
+        
+        const existingClient = c.clients?.find(cli => cli.id === assId) || {};
+        const newClient = {
+          id: assId,
+          name: modal.client.trim(),
+          managerName: modal.managerName.trim(),
+          billingCycle: modal.billingCycle,
+          managerEmail: modal.managerEmail.trim(),
+          phone: modal.phone.trim(),
+          poNumber: modal.poNumber.trim(),
+          orderEndDate: modal.orderEndDate || new Date().toISOString().split('T')[0],
+          poUploaded: existingClient.poUploaded || false,
+          poFileName: existingClient.poFileName || "",
+          sent: existingClient.sent || false
+        };
+        
+        let newAssignments;
+        let newClients;
+        if (isEditing) {
+          newAssignments = c.assignments.map(ass => ass.id === assId ? newAssignment : ass);
+          newClients = c.clients ? c.clients.map(cli => cli.id === assId ? newClient : cli) : [newClient];
+        } else {
+          newAssignments = [...c.assignments, newAssignment];
+          newClients = c.clients ? [...c.clients, newClient] : [newClient];
+        }
+        
         return {
           ...c,
           assignments: newAssignments,
-          clients: updatedClients
+          clients: newClients,
+          updatedAt: Date.now()
         };
       }
       return c;
@@ -202,7 +276,13 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
       craName: '',
       client: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      phone: '',
+      poNumber: '',
+      orderEndDate: ''
     });
   };
 
@@ -210,11 +290,12 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
     setConsultants(prev => prev.map(c => {
       if (c.id === modal.consultantId) {
         const newAssignments = c.assignments.filter(ass => ass.id !== modal.targetId);
-        const updatedClients = syncClientsWithAssignments(newAssignments, c.clients || []);
+        const newClients = c.clients ? c.clients.filter(cli => cli.id !== modal.targetId) : [];
         return {
           ...c,
           assignments: newAssignments,
-          clients: updatedClients
+          clients: newClients,
+          updatedAt: Date.now()
         };
       }
       return c;
@@ -226,11 +307,20 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
     setConsultants(prev => prev.map(c => {
       if (c.id === consultantId) {
         const newAssignments = c.assignments.map(ass => ass.id === assId ? { ...ass, [field]: value } : ass);
-        const updatedClients = syncClientsWithAssignments(newAssignments, c.clients || []);
+        const newClients = c.clients ? c.clients.map(cli => {
+          if (cli.id === assId) {
+            return {
+              ...cli,
+              name: field === 'client' ? value : cli.name
+            };
+          }
+          return cli;
+        }) : [];
         return {
           ...c,
           assignments: newAssignments,
-          clients: updatedClients
+          clients: newClients,
+          updatedAt: Date.now()
         };
       }
       return c;
@@ -246,7 +336,7 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
         </div>
         <div className="flex gap-3">
           <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="6" y1="12" y2="12"/><line x1="2" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="6" x2="6" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="6" x2="6" y1="12" y2="12"/><line x1="2" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="6" x2="6" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
             Filter
           </button>
           <button className="btn btn-primary" onClick={handleCreateNew}>
@@ -268,10 +358,31 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
                   <p className="m-0 text-sm text-muted">{consultant.role}</p>
                 </div>
               </div>
-              <MoreHorizontal 
-                className="text-light cursor-pointer hover:text-primary" 
-                onClick={() => setEditingConsultant(consultant)}
-              />
+              <div style={{ position: 'relative' }}>
+                <MoreHorizontal 
+                  className="text-light cursor-pointer hover:text-primary" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveCardMenu(activeCardMenu === consultant.id ? null : consultant.id);
+                  }}
+                />
+                {activeCardMenu === consultant.id && (
+                  <>
+                    <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
+                    <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
+                      <button className="dropdown-item" onClick={() => { setEditingConsultant(consultant); setActiveCardMenu(null); }}>
+                        👤 Employee Details
+                      </button>
+                      <button className="dropdown-item" onClick={() => { setViewingInvoiceHistoryConsultant(consultant); setActiveCardMenu(null); }}>
+                        📄 Invoice History
+                      </button>
+                      <button className="dropdown-item" onClick={() => { handleUndo(); setActiveCardMenu(null); }} disabled={!canUndo}>
+                        ↩ Undo Last Action
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="card-body">
@@ -342,13 +453,22 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
                             />
                           </td>
                           <td className="action-cell">
-                            <button 
-                              className="delete-row-btn"
-                              title="Delete Assignment"
-                              onClick={() => openDeleteAssignmentModal(consultant.id, ass.id)}
-                            >
-                              &times;
-                            </button>
+                            <div className="flex gap-1 justify-end">
+                              <button 
+                                className="edit-row-btn"
+                                title="Edit Client & Assignment Details"
+                                onClick={() => openEditAssignmentModal(consultant, ass)}
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                className="delete-row-btn"
+                                title="Delete Assignment"
+                                onClick={() => openDeleteAssignmentModal(consultant.id, ass.id)}
+                              >
+                                &times;
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -469,10 +589,65 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
         </>
       )}
 
+      {/* Invoice History Side Panel */}
+      {viewingInvoiceHistoryConsultant && (
+        <>
+          <div className="side-panel-overlay" onClick={() => setViewingInvoiceHistoryConsultant(null)}></div>
+          <div className="side-panel" style={{ width: '480px' }}>
+            <div className="panel-header">
+              <h3 className="m-0 font-bold text-lg text-primary">
+                Invoice History - {viewingInvoiceHistoryConsultant.firstname} {viewingInvoiceHistoryConsultant.name}
+              </h3>
+              <button className="btn-text text-light text-xl" onClick={() => setViewingInvoiceHistoryConsultant(null)}>&times;</button>
+            </div>
+            
+            <div className="panel-body flex flex-col gap-4">
+              {viewingInvoiceHistoryConsultant.clients && viewingInvoiceHistoryConsultant.clients.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  {viewingInvoiceHistoryConsultant.clients.map(cli => (
+                    <div key={cli.id} className="card p-4 bg-slate-50" style={{ border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-bold text-primary text-md">{cli.name}</span>
+                        <span className={`badge ${cli.sent ? 'badge-po-uploaded' : 'badge-po-pending'}`}>
+                          {cli.sent ? 'Sent / Validated' : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted flex flex-col gap-1">
+                        <div><strong>PO Number:</strong> {cli.poNumber || "Not configured"}</div>
+                        <div><strong>Billing Cycle:</strong> {cli.billingCycle || "Monthly"}</div>
+                        <div><strong>Manager Name:</strong> {cli.managerName || "N/A"}</div>
+                        <div><strong>Manager Email:</strong> {cli.managerEmail || "N/A"}</div>
+                        <div><strong>Phone Number:</strong> {cli.phone || "N/A"}</div>
+                        <div><strong>Order End Date:</strong> {cli.orderEndDate || "N/A"}</div>
+                        {cli.poUploaded ? (
+                          <div className="mt-3 p-3 bg-white border border-slate-200 rounded-md flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span style={{ fontSize: '1.25rem' }}>📄</span>
+                              <span className="font-medium text-slate-700">{cli.poFileName || "purchase_order.pdf"}</span>
+                            </div>
+                            <span className="text-success-color font-semibold">✓ Linked</span>
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-red-500 font-medium">⚠️ Purchase Order Pending Upload</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted p-8 border border-dashed border-slate-300 rounded-lg">
+                  No billing/invoice history found.
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Reusable Custom Modal */}
       {modal.isOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-container" onClick={e => e.stopPropagation()}>
+          <div className="modal-container" style={{ maxWidth: modal.type === 'assignmentDetail' ? '650px' : '450px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">{modal.title}</h3>
               <button className="btn-text text-light text-xl" onClick={closeModal}>&times;</button>
@@ -500,37 +675,103 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
                 </p>
               )}
               
-              {modal.type === 'addAssignment' && (
+              {modal.type === 'assignmentDetail' && (
                 <div className="flex flex-col gap-4">
-                  <div className="form-group mb-0">
-                    <label className="form-label">Client Name</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="e.g. Veolia" 
-                      value={modal.client} 
-                      onChange={e => setModal({ ...modal, client: e.target.value })}
-                      autoFocus
-                    />
-                  </div>
                   <div className="flex gap-4">
-                    <div className="form-group w-full mb-0">
-                      <label className="form-label">Start Date</label>
-                      <input 
-                        type="date" 
-                        className="form-input" 
-                        value={modal.startDate} 
-                        onChange={e => setModal({ ...modal, startDate: e.target.value })}
-                      />
+                    {/* Left Column: Basic Assignment Info */}
+                    <div className="flex-1 flex flex-col gap-4">
+                      <div className="form-group mb-0">
+                        <label className="form-label">Client Name</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="e.g. Veolia" 
+                          value={modal.client} 
+                          onChange={e => setModal({ ...modal, client: e.target.value })}
+                          autoFocus
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Start Date</label>
+                        <input 
+                          type="date" 
+                          className="form-input" 
+                          value={modal.startDate} 
+                          onChange={e => setModal({ ...modal, startDate: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">End Date</label>
+                        <input 
+                          type="date" 
+                          className="form-input" 
+                          value={modal.endDate} 
+                          onChange={e => setModal({ ...modal, endDate: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Billing Cycle</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="e.g. Monthly"
+                          value={modal.billingCycle} 
+                          onChange={e => setModal({ ...modal, billingCycle: e.target.value })}
+                        />
+                      </div>
                     </div>
-                    <div className="form-group w-full mb-0">
-                      <label className="form-label">End Date</label>
-                      <input 
-                        type="date" 
-                        className="form-input" 
-                        value={modal.endDate} 
-                        onChange={e => setModal({ ...modal, endDate: e.target.value })}
-                      />
+
+                    {/* Right Column: Detailed Contact Info */}
+                    <div className="flex-1 flex flex-col gap-4">
+                      <div className="form-group mb-0">
+                        <label className="form-label">Manager Name</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="e.g. Jean-Pierre Lambert"
+                          value={modal.managerName} 
+                          onChange={e => setModal({ ...modal, managerName: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Manager Email</label>
+                        <input 
+                          type="email" 
+                          className="form-input" 
+                          placeholder="e.g. manager@client.com"
+                          value={modal.managerEmail} 
+                          onChange={e => setModal({ ...modal, managerEmail: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Phone Number</label>
+                        <input 
+                          type="tel" 
+                          className="form-input" 
+                          placeholder="e.g. +33 1 23 45 67 89"
+                          value={modal.phone} 
+                          onChange={e => setModal({ ...modal, phone: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Purchase Order Number</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="e.g. VE-2024-MAINT"
+                          value={modal.poNumber} 
+                          onChange={e => setModal({ ...modal, poNumber: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Order End Date</label>
+                        <input 
+                          type="date" 
+                          className="form-input" 
+                          value={modal.orderEndDate} 
+                          onChange={e => setModal({ ...modal, orderEndDate: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -551,8 +792,8 @@ export default function ConsultantConfiguration({ consultants, setConsultants, f
               {modal.type === 'deleteCra' && (
                 <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteCraConfirm}>Delete</button>
               )}
-              {modal.type === 'addAssignment' && (
-                <button className="btn btn-primary" onClick={handleAddAssignmentConfirm}>Assign</button>
+              {modal.type === 'assignmentDetail' && (
+                <button className="btn btn-primary" onClick={handleSaveAssignmentDetail}>Save Details</button>
               )}
               {modal.type === 'deleteAssignment' && (
                 <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteAssignmentConfirm}>Delete</button>

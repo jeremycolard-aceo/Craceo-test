@@ -24,11 +24,31 @@ function App() {
     cra: []
   });
 
-  // State initialization (In-memory, LocalStorage removed)
-  const [consultants, setConsultants] = useState(mockConsultants);
+  // State and Undo History initialization
+  const [history, setHistory] = useState([]);
+  const [consultants, setConsultantsState] = useState(mockConsultants);
+
+  const setConsultants = (newVal) => {
+    setConsultantsState(prev => {
+      const nextVal = typeof newVal === 'function' ? newVal(prev) : newVal;
+      // Push copy of previous state to history if different
+      if (JSON.stringify(prev) !== JSON.stringify(nextVal)) {
+        setHistory(h => [...h, prev]);
+      }
+      return nextVal;
+    });
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const previousState = history[history.length - 1];
+    setHistory(history.slice(0, -1));
+    setConsultantsState(previousState);
+  };
 
   const handleReset = () => {
-    setConsultants(mockConsultants);
+    setHistory([]);
+    setConsultantsState(mockConsultants);
   };
 
   // Perform combining filters
@@ -95,6 +115,8 @@ function App() {
               setConsultants={setConsultants} 
               filteredConsultants={filteredConsultants}
               onOpenFilter={() => setIsFilterOpen(true)}
+              handleUndo={handleUndo}
+              canUndo={history.length > 0}
             />
           )}
           {currentView === 'validations' && (
@@ -103,6 +125,8 @@ function App() {
               setConsultants={setConsultants} 
               filteredConsultants={filteredConsultants}
               onOpenFilter={() => setIsFilterOpen(true)}
+              handleUndo={handleUndo}
+              canUndo={history.length > 0}
             />
           )}
         </div>

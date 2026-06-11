@@ -1,11 +1,39 @@
-import React, { useState } from 'react';
-import { MoreHorizontal, Paperclip, Save, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MoreHorizontal, Paperclip, Save, FileText, Send } from 'lucide-react';
 
-export default function ValidationsPipeline({ consultants, setConsultants, filteredConsultants, onOpenFilter }) {
+// Relative time formatter helper
+const formatTimeAgo = (timestamp) => {
+  if (!timestamp) return "Update just now";
+  const diffMs = Date.now() - timestamp;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Update just now";
+  if (diffMins < 60) return `Update ${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `Update ${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `Update ${diffDays}d ago`;
+};
+
+export default function ValidationsPipeline({ 
+  consultants, 
+  setConsultants, 
+  filteredConsultants, 
+  onOpenFilter,
+  handleUndo,
+  canUndo 
+}) {
   const [selectedClient, setSelectedClient] = useState(null); // Local copy of client being edited
   const [selectedConsultant, setSelectedConsultant] = useState(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [validationModal, setValidationModal] = useState({ isOpen: false, consultant: null });
+  const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of active 3-dots menu
+
+  // Force re-renders for live relative time updates
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000); // Rerender every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   const handleClientClick = (consultant, client) => {
     setSelectedConsultant(consultant);
@@ -60,7 +88,34 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
           );
           return {
             ...c,
-            clients: updatedClients
+            clients: updatedClients,
+            updatedAt: Date.now()
+          };
+        }
+        return c;
+      }));
+    }
+    closePanel();
+  };
+
+  const handleMarkAsSend = () => {
+    if (selectedConsultant && selectedClient) {
+      // Set sent to true locally
+      const updatedClient = {
+        ...selectedClient,
+        sent: true
+      };
+      
+      // Update globally
+      setConsultants(prev => prev.map(c => {
+        if (c.id === selectedConsultant.id) {
+          const updatedClients = c.clients.map(cli => 
+            cli.id === selectedClient.id ? updatedClient : cli
+          );
+          return {
+            ...c,
+            clients: updatedClients,
+            updatedAt: Date.now()
           };
         }
         return c;
@@ -77,7 +132,8 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
           ...c,
           cras: c.cras.map(cra => 
             cra.id === craId ? { ...cra, validated: !cra.validated } : cra
-          )
+          ),
+          updatedAt: Date.now()
         };
       }
       return c;
@@ -95,7 +151,7 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
   const handleValidateConfirm = () => {
     if (validationModal.consultant) {
       setConsultants(prev => prev.map(c => 
-        c.id === validationModal.consultant.id ? { ...c, archived: true } : c
+        c.id === validationModal.consultant.id ? { ...c, archived: true, updatedAt: Date.now() } : c
       ));
     }
     setValidationModal({ isOpen: false, consultant: null });
@@ -109,18 +165,20 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
     c.cras.some(cra => !cra.validated)
   );
 
+  // Moves to Billing if all CRAs are validated AND at least one client invoice is NOT sent yet
   const billingConsultants = filteredConsultants.filter(c => 
     !c.archived && 
     (!c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated)) && 
     c.clients && 
     c.clients.length > 0 && 
-    c.clients.some(cli => !cli.poUploaded)
+    c.clients.some(cli => !cli.sent)
   );
 
+  // Moves to Validation if all CRAs are validated AND all client invoices are sent
   const validationConsultants = filteredConsultants.filter(c => 
     !c.archived && 
     (!c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated)) && 
-    (!c.clients || c.clients.length === 0 || c.clients.every(cli => cli.poUploaded))
+    (!c.clients || c.clients.length === 0 || c.clients.every(cli => cli.sent))
   );
 
   return (
@@ -145,9 +203,29 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
           <div className="kanban-cards">
             {craConsultants.map(c => (
               <div key={`cra-${c.id}`} className="kanban-card">
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', position: 'relative' }}>
                   <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>{c.firstname} {c.name}</h3>
-                  <MoreHorizontal className="text-light" size={16} />
+                  <MoreHorizontal 
+                    className="text-light cursor-pointer hover:text-primary" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveCardMenu(activeCardMenu === c.id ? null : c.id);
+                    }} 
+                  />
+                  {activeCardMenu === c.id && (
+                    <>
+                      <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
+                      <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={() => { handleUndo(); setActiveCardMenu(null); }}
+                          disabled={!canUndo}
+                        >
+                          ↩ Undo Last Action
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {c.cras.map(cra => (
@@ -163,7 +241,7 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
                 </div>
                 <div className="flex justify-between items-center text-xs text-muted">
                   <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px' }}>{c.initials}</div>
-                  <span className="font-semibold text-muted">To Validate</span>
+                  <span className="font-semibold text-light">{formatTimeAgo(c.updatedAt)}</span>
                 </div>
               </div>
             ))}
@@ -176,30 +254,65 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
         {/* Column 2: Billing */}
         <div className="kanban-column">
           <div className="kanban-header">
-            <span style={{ color: 'var(--accent-color)' }}>●</span> Billing
+            <span style={{ color: 'var(--accent-color)' }}>●</span> Facturation
           </div>
           <div className="kanban-cards">
             {billingConsultants.map(c => (
               <div key={`bill-${c.id}`} className="kanban-card">
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', position: 'relative' }}>
                   <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)' }}>{c.firstname} {c.name}</h3>
-                  <MoreHorizontal className="text-light" size={16} />
+                  <MoreHorizontal 
+                    className="text-light cursor-pointer hover:text-primary" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveCardMenu(activeCardMenu === c.id ? null : c.id);
+                    }} 
+                  />
+                  {activeCardMenu === c.id && (
+                    <>
+                      <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
+                      <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={() => { handleUndo(); setActiveCardMenu(null); }}
+                          disabled={!canUndo}
+                        >
+                          ↩ Undo Last Action
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex gap-2 mb-4 flex-wrap">
-                  {c.clients.map(client => (
-                    <span 
-                      key={client.id} 
-                      className={`badge cursor-pointer ${client.poUploaded ? 'badge-po-uploaded' : 'badge-po-pending'}`}
-                      onClick={() => handleClientClick(c, client)}
-                      title={client.poUploaded ? "PO Uploaded. Click to edit." : "PO Pending. Click to upload."}
-                    >
-                      {client.poUploaded ? '✓ ' : ''}{client.name}
-                    </span>
-                  ))}
+                  {c.clients.map(client => {
+                    let badgeClass = "badge-po-pending";
+                    let prefix = "";
+                    let title = "PO pending. Click to upload/send.";
+                    if (client.sent) {
+                      badgeClass = "badge-po-uploaded";
+                      prefix = "✓ ";
+                      title = "Sent / Validated. Click to edit.";
+                    } else if (client.poUploaded) {
+                      badgeClass = "badge-blue";
+                      prefix = "📄 ";
+                      title = "PO Uploaded. Click to mark as sent.";
+                    }
+                    
+                    return (
+                      <span 
+                        key={client.id} 
+                        className={`badge cursor-pointer ${badgeClass}`}
+                        onClick={() => handleClientClick(c, client)}
+                        title={title}
+                      >
+                        {prefix}{client.name}
+                      </span>
+                    );
+                  })}
                 </div>
                 <div className="flex justify-between items-center text-xs text-muted">
                   <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px', backgroundColor: '#64748B' }}>{c.initials}</div>
-                  <span className="font-semibold" style={{ color: 'var(--accent-color)' }}>Billing Pending</span>
+                  <span className="font-semibold text-light">{formatTimeAgo(c.updatedAt)}</span>
                 </div>
               </div>
             ))}
@@ -229,12 +342,12 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
                 
                 <div className="text-xs text-muted mb-3">
                   {c.cras && c.cras.length > 0 && <div className="mb-1">✓ {c.cras.length} CRA(s) verified</div>}
-                  {c.clients && c.clients.length > 0 && <div>✓ {c.clients.length} PO(s) uploaded</div>}
+                  {c.clients && c.clients.length > 0 && <div>✓ {c.clients.length} PO(s) sent</div>}
                 </div>
 
                 <div className="flex justify-between items-center text-xs text-muted">
                   <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px' }}>{c.initials}</div>
-                  <span className="font-semibold text-success-color">Click to Validate</span>
+                  <span className="font-semibold text-light">{formatTimeAgo(c.updatedAt)}</span>
                 </div>
               </div>
             ))}
@@ -407,6 +520,23 @@ export default function ValidationsPipeline({ consultants, setConsultants, filte
             </div>
 
             <div className="panel-footer flex-col">
+              <button 
+                className="btn w-full p-4" 
+                style={{ 
+                  backgroundColor: selectedClient.sent ? 'var(--success-color)' : '#ECEFF4', 
+                  color: selectedClient.sent ? '#FFFFFF' : 'var(--primary-color)',
+                  fontWeight: 600,
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+                onClick={handleMarkAsSend}
+              >
+                <Send size={16} />
+                {selectedClient.sent ? 'Validated & Sent' : 'Mark as Send'}
+              </button>
               <button className="btn btn-primary w-full p-4" onClick={handleSaveChanges}>
                 <Save size={18} /> Save Changes
               </button>
