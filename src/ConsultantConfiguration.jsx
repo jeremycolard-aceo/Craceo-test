@@ -69,7 +69,7 @@ export default function ConsultantConfiguration({
       firstname: "",
       role: "Consultant",
       initials: "NEW",
-      cras: [],
+      cras: [{ id: 'cra_boond_' + Date.now(), name: "BOOND", validated: false }],
       assignments: [],
       clients: [],
       incomingDay: "",
@@ -90,8 +90,15 @@ export default function ConsultantConfiguration({
 
   const saveConsultantDetails = () => {
     const initials = getInitials(editingConsultant.firstname, editingConsultant.name);
+    // Ensure BOOND exists
+    let finalCras = editingConsultant.cras || [];
+    const hasBoond = finalCras.some(cra => cra.name.toLowerCase().includes('boond'));
+    if (!hasBoond) {
+      finalCras = [...finalCras, { id: 'cra_boond_' + Date.now(), name: "BOOND", validated: false }];
+    }
     const updatedConsultant = { 
       ...editingConsultant, 
+      cras: finalCras,
       initials
     };
     
@@ -188,7 +195,7 @@ export default function ConsultantConfiguration({
       consultantId: consultant.id,
       targetId: ass.id,
       title: 'Edit Assignment & Client Info',
-      craName: '',
+      craName: ass.craName || '',
       client: ass.client || '',
       startDate: ass.startDate || '',
       endDate: ass.endDate || '',
@@ -212,7 +219,8 @@ export default function ConsultantConfiguration({
         id: assId,
         client: modal.client.trim(),
         startDate: modal.startDate || new Date().toISOString().split('T')[0],
-        endDate: modal.endDate || new Date().toISOString().split('T')[0]
+        endDate: modal.endDate || new Date().toISOString().split('T')[0],
+        craName: modal.craName.trim()
       };
       
       const existingClient = c.clients?.find(cli => cli.id === assId) || {};
@@ -239,10 +247,25 @@ export default function ConsultantConfiguration({
         newAssignments = [...c.assignments, newAssignment];
         newClients = c.clients ? [...c.clients, newClient] : [newClient];
       }
+
+      // Automatically add custom CRA if provided and doesn't exist
+      let newCras = c.cras || [];
+      if (modal.craName.trim()) {
+        const craNameLower = modal.craName.trim().toLowerCase();
+        const exists = newCras.some(cra => cra.name.toLowerCase() === craNameLower);
+        if (!exists) {
+          newCras = [...newCras, {
+            id: 'cra_' + Date.now(),
+            name: modal.craName.trim(),
+            validated: false
+          }];
+        }
+      }
       
       return {
         assignments: newAssignments,
-        clients: newClients
+        clients: newClients,
+        cras: newCras
       };
     });
     
@@ -279,26 +302,6 @@ export default function ConsultantConfiguration({
       };
     });
     closeModal();
-  };
-
-  const editAssignment = (consultantId, assId, field, value) => {
-    updateConsultant(consultantId, (c) => {
-      const newAssignments = c.assignments.map(ass => ass.id === assId ? { ...ass, [field]: value } : ass);
-      const newClients = c.clients ? c.clients.map(cli => {
-        if (cli.id === assId) {
-          return {
-            ...cli,
-            name: field === 'client' ? value : cli.name
-          };
-        }
-        return cli;
-      }) : [];
-      
-      return {
-        assignments: newAssignments,
-        clients: newClients
-      };
-    });
   };
 
   return (
@@ -367,7 +370,7 @@ export default function ConsultantConfiguration({
                     <>
                       <div className="dropdown-overlay" onClick={() => setActiveCardMenu(null)}></div>
                       <div className="card-dropdown" style={{ right: 0, top: '24px' }}>
-                        <button className="dropdown-item" onClick={() => { setEditingConsultant(consultant); setActiveCardMenu(null); }}>
+                        <button className="dropdown-item" onClick={() => { setEditingConsultant(consultant); setCreatingConsultant(false); setActiveCardMenu(null); }}>
                           👤 Employee Details
                         </button>
                         <button className="dropdown-item" onClick={() => { setViewingInvoiceHistoryConsultant(consultant); setActiveCardMenu(null); }}>
@@ -397,11 +400,6 @@ export default function ConsultantConfiguration({
                   {consultant.cras.map(cra => (
                     <div key={cra.id} className="flex justify-between items-center p-2 mb-2 bg-slate-50 border border-slate-200 rounded-md">
                       <span className="text-sm font-medium">{cra.name}</span>
-                      <Trash2 
-                        size={16} 
-                        className="text-red-400 cursor-pointer hover:text-red-600" 
-                        onClick={() => openDeleteCraModal(consultant.id, cra.id)}
-                      />
                     </div>
                   ))}
                   {consultant.cras.length === 0 && <div className="text-xs text-muted">No CRAs configured.</div>}
@@ -415,66 +413,34 @@ export default function ConsultantConfiguration({
                   </button>
                 </div>
 
-                {consultant.assignments.length > 0 ? (
-                  <div className="assignments-box">
-                    <table className="assignments-table">
-                      <thead>
-                        <tr>
-                          <th>Client</th>
-                          <th>Start Date</th>
-                          <th>End Date</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {consultant.assignments.map(ass => (
-                          <tr key={ass.id}>
-                            <td className="client-cell">
-                              <input 
-                                type="text" 
-                                className={`client-input ${ass.client.toLowerCase().includes('new client') ? 'new-client' : ''}`}
-                                value={ass.client}
-                                onChange={(e) => editAssignment(consultant.id, ass.id, 'client', e.target.value)}
-                              />
-                            </td>
-                            <td className="date-cell">
-                              <input 
-                                type="date" 
-                                className="date-pill-input"
-                                value={ass.startDate}
-                                onChange={(e) => editAssignment(consultant.id, ass.id, 'startDate', e.target.value)}
-                              />
-                            </td>
-                            <td className="date-cell">
-                              <input 
-                                type="date" 
-                                className="date-pill-input"
-                                value={ass.endDate}
-                                onChange={(e) => editAssignment(consultant.id, ass.id, 'endDate', e.target.value)}
-                              />
-                            </td>
-                            <td className="action-cell">
-                              <div className="flex gap-1 justify-end">
-                                <button 
-                                  className="edit-row-btn"
-                                  title="Edit Client & Assignment Details"
-                                  onClick={() => openEditAssignmentModal(consultant, ass)}
-                                >
-                                  ✏️
-                                </button>
-                                <button 
-                                  className="delete-row-btn"
-                                  title="Delete Assignment"
-                                  onClick={() => openDeleteAssignmentModal(consultant.id, ass.id)}
-                                >
-                                  &times;
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {consultant.assignments && consultant.assignments.length > 0 ? (
+                  <div className="flex flex-col gap-2" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                    {consultant.assignments.map(ass => (
+                      <div key={ass.id} className="flex justify-between items-center p-2 rounded-md bg-slate-50 border border-slate-200 text-xs">
+                        <div className="flex flex-col" style={{ minWidth: 0 }}>
+                          <span className="font-bold text-slate-800 text-ellipsis overflow-hidden whitespace-nowrap">{ass.client}</span>
+                          <span className="text-slate-500">{ass.startDate} → {ass.endDate}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            className="edit-row-btn"
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px', fontSize: '0.9rem' }}
+                            title="Edit Assignment & Client Info"
+                            onClick={() => openEditAssignmentModal(consultant, ass)}
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            className="delete-row-btn"
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px', fontSize: '1rem', color: 'var(--danger-color)' }}
+                            title="Delete Assignment"
+                            onClick={() => openDeleteAssignmentModal(consultant.id, ass.id)}
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
@@ -493,13 +459,13 @@ export default function ConsultantConfiguration({
       {/* Détail Employé Side Panel */}
       {editingConsultant && (
         <>
-          <div className="side-panel-overlay" onClick={() => setEditingConsultant(null)}></div>
+          <div className="side-panel-overlay" onClick={() => { setEditingConsultant(null); setCreatingConsultant(false); }}></div>
           <div className="side-panel" style={{ width: '500px' }}>
             <div className="panel-header">
               <h3 className="m-0 font-bold text-lg text-primary">
                 {creatingConsultant ? 'New Consultant' : 'Employee Details'}
               </h3>
-              <button className="btn-text text-light text-xl" onClick={() => setEditingConsultant(null)}>&times;</button>
+              <button className="btn-text text-light text-xl" onClick={() => { setEditingConsultant(null); setCreatingConsultant(false); }}>&times;</button>
             </div>
             
             <div className="panel-body flex flex-col gap-4">
@@ -857,6 +823,16 @@ export default function ConsultantConfiguration({
                           placeholder="e.g. Monthly"
                           value={modal.billingCycle} 
                           onChange={e => setModal({ ...modal, billingCycle: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group mb-0">
+                        <label className="form-label">Linked CRA Name (Optional)</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="e.g. CRA VEOLIA"
+                          value={modal.craName} 
+                          onChange={e => setModal({ ...modal, craName: e.target.value })}
                         />
                       </div>
                     </div>

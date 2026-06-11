@@ -14,6 +14,21 @@ const formatTimeAgo = (timestamp) => {
   return `Update ${diffDays}d ago`;
 };
 
+// Check if a client assignment is active in the month of the consultant's card (updatedAt)
+const isClientActiveInMonth = (consultant, client) => {
+  const ass = consultant.assignments?.find(a => a.id === client.id);
+  if (!ass) return false;
+  
+  const cardDate = new Date(consultant.updatedAt || Date.now());
+  const startOfMonth = new Date(cardDate.getFullYear(), cardDate.getMonth(), 1);
+  const endOfMonth = new Date(cardDate.getFullYear(), cardDate.getMonth() + 1, 0, 23, 59, 59, 999);
+  
+  const assStart = new Date(ass.startDate);
+  const assEnd = ass.endDate ? new Date(ass.endDate) : null;
+  
+  return assStart <= endOfMonth && (!assEnd || assEnd >= startOfMonth);
+};
+
 export default function ValidationsPipeline({ 
   consultants, 
   setConsultants, 
@@ -138,21 +153,25 @@ export default function ValidationsPipeline({
     c.cras.some(cra => !cra.validated)
   );
 
-  // Moves to Billing if all CRAs are validated AND at least one client invoice is NOT sent yet
-  const billingConsultants = filteredConsultants.filter(c => 
-    !c.archived && 
-    (!c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated)) && 
-    c.clients && 
-    c.clients.length > 0 && 
-    c.clients.some(cli => !cli.sent)
-  );
+  // Moves to Billing if all CRAs are validated AND at least one ACTIVE client invoice is NOT sent yet
+  const billingConsultants = filteredConsultants.filter(c => {
+    if (c.archived) return false;
+    const allCrasValidated = !c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated);
+    if (!allCrasValidated) return false;
+    
+    const activeClients = c.clients ? c.clients.filter(cli => isClientActiveInMonth(c, cli)) : [];
+    return activeClients.length > 0 && activeClients.some(cli => !cli.sent);
+  });
 
-  // Moves to Validation if all CRAs are validated AND all client invoices are sent
-  const validationConsultants = filteredConsultants.filter(c => 
-    !c.archived && 
-    (!c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated)) && 
-    (!c.clients || c.clients.length === 0 || c.clients.every(cli => cli.sent))
-  );
+  // Moves to Validation if all CRAs are validated AND all ACTIVE client invoices are sent
+  const validationConsultants = filteredConsultants.filter(c => {
+    if (c.archived) return false;
+    const allCrasValidated = !c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated);
+    if (!allCrasValidated) return false;
+    
+    const activeClients = c.clients ? c.clients.filter(cli => isClientActiveInMonth(c, cli)) : [];
+    return activeClients.length === 0 || activeClients.every(cli => cli.sent);
+  });
 
   return (
     <div className="page-content flex flex-col h-full">
@@ -311,7 +330,7 @@ export default function ValidationsPipeline({
                   )}
                 </div>
                 <div className="flex gap-2 mb-4 flex-wrap">
-                  {c.clients.map(client => {
+                  {c.clients.filter(client => isClientActiveInMonth(c, client)).map(client => {
                     let badgeClass = "badge-po-pending";
                     let prefix = "";
                     let title = "PO pending. Click to upload/send.";
@@ -420,7 +439,9 @@ export default function ValidationsPipeline({
                 
                 <div className="text-xs text-muted mb-3">
                   {c.cras && c.cras.length > 0 && <div className="mb-1">✓ {c.cras.length} CRA(s) verified</div>}
-                  {c.clients && c.clients.length > 0 && <div>✓ {c.clients.length} PO(s) sent</div>}
+                  {c.clients && c.clients.filter(cli => isClientActiveInMonth(c, cli)).length > 0 && (
+                    <div>✓ {c.clients.filter(cli => isClientActiveInMonth(c, cli)).length} PO(s) sent</div>
+                  )}
                 </div>
 
                 <div className="flex justify-between items-center text-xs text-muted">

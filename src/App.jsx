@@ -72,9 +72,17 @@ function App() {
           });
         }
 
+        // Ensure BOOND cra exists and is mandatory
+        let finalCras = updatedFields.cras || c.cras || [];
+        const hasBoond = finalCras.some(cra => cra.name.toLowerCase().includes('boond'));
+        if (!hasBoond) {
+          finalCras = [...finalCras, { id: 'cra_boond_' + Date.now(), name: "BOOND", validated: false }];
+        }
+
         return {
           ...c,
           ...updatedFields,
+          cras: finalCras,
           history: newHistory,
           updatedAt: Date.now()
         };
