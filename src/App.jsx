@@ -110,7 +110,7 @@ function App() {
       id: 'final_validation_1',
       type: 'final',
       title: 'Validation Confirmed',
-      message: 'The complete workflow for **Nicolas Sanchez** has been validated.',
+      message: 'The complete workflow for **Nicolas Sanchez** has been validated by **Marie Dubois**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 400000, // 7m ago
@@ -120,7 +120,7 @@ function App() {
       id: 'final_validation_bulk_1',
       type: 'final',
       title: 'Validation Confirmed',
-      message: 'The complete workflow for **3** consultants has been validated.',
+      message: 'The complete workflow for **3** consultants has been validated by **Marie Dubois**.',
       author: 'Marie Dubois',
       employeeName: 'Multiple',
       time: Date.now() - 600000, // 10m ago

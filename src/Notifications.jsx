@@ -179,7 +179,7 @@ export default function Notifications({ notifications }) {
 
               {/* Message Details */}
               <div className="flex-1" style={{ minWidth: 0 }}>
-                <div className="flex justify-between items-start mb-1">
+                <div className="flex justify-between items-start" style={{ marginBottom: '8px' }}>
                   <h4 className="m-0 text-sm font-bold" style={{ color: 'var(--primary-color)' }}>
                     {n.title}
                   </h4>

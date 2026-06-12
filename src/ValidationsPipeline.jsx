@@ -60,7 +60,7 @@ export default function ValidationsPipeline({
       addNotification(
         'final',
         'Validation Confirmed',
-        `The complete workflow for **${employeeName}** has been validated.`,
+        `The complete workflow for **${employeeName}** has been validated by **Marie Dubois**.`,
         employeeName,
         'Marie Dubois'
       );
@@ -70,7 +70,7 @@ export default function ValidationsPipeline({
       addNotification(
         'final',
         'Validation Confirmed',
-        `The complete workflow for **${count}** consultants has been validated.`,
+        `The complete workflow for **${count}** consultants has been validated by **Marie Dubois**.`,
         names.join(', '),
         'Marie Dubois',
         { consultantsList: names }
@@ -213,7 +213,7 @@ export default function ValidationsPipeline({
       addNotification(
         'final',
         'Validation Confirmed',
-        `The complete workflow for **${employeeName}** has been validated.`,
+        `The complete workflow for **${employeeName}** has been validated by **Marie Dubois**.`,
         employeeName,
         'Marie Dubois'
       );

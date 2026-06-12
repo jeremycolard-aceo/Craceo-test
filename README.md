@@ -148,11 +148,11 @@ L'ensemble des notifications générées par les actions utilisateurs et les pro
 
 #### C. Étape 3 : Validation Finale & Archivage (Final Validation)
 - **Validation Individuelle** :
-  `The complete workflow for **[Consultant]** has been validated.`
-  *Exemple* : `The complete workflow for **Nicolas Sanchez** has been validated.`
+  `The complete workflow for **[Consultant]** has been validated by **[Manager]**.`
+  *Exemple* : `The complete workflow for **Nicolas Sanchez** has been validated by **Marie Dubois**.`
 - **Validation Groupée (En Masse)** :
-  `The complete workflow for **[Number]** consultants has been validated.`
-  *Exemple* : `The complete workflow for **3** consultants has been validated.`
+  `The complete workflow for **[Number]** consultants has been validated by **[Manager]**.`
+  *Exemple* : `The complete workflow for **3** consultants has been validated by **Marie Dubois**.`
   *Note* : Lorsque le nombre de consultants validés en masse est supérieur à 2, l'interface propose un lien cliquable orange permettant d'ouvrir un pop-up modal détaillant la liste complète des noms concernés.
 
 #### D. Actions d'Annulation (Undo Action)
