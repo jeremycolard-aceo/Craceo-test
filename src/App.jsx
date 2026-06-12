@@ -74,7 +74,7 @@ function App() {
       id: 1,
       type: 'undo',
       title: 'Action Cancelled',
-      message: 'The last action concerning **Nicolas Sanchez** has been canceled.',
+      message: 'The last action concerning **Nicolas Sanchez** has been canceled by **Marie Dubois**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 30000, // Just now
@@ -88,16 +88,6 @@ function App() {
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 300000, // 5m ago
-      read: false
-    },
-    {
-      id: 3,
-      type: 'cra',
-      title: 'Validation Revoked',
-      message: 'The CRA **BOOND** for **October** has been unvalidated for correction by **Alexandre Rossi** for **Guillaume Duluc**.',
-      author: 'Alexandre Rossi',
-      employeeName: 'Guillaume Duluc',
-      time: Date.now() - 900000, // 15m ago
       read: false
     },
     {
@@ -160,7 +150,7 @@ function App() {
         addNotification(
           'undo',
           'Action Cancelled',
-          `The last action concerning **${c.firstname} ${c.name}** has been canceled.`,
+          `The last action concerning **${c.firstname} ${c.name}** has been canceled by **Marie Dubois**.`,
           `${c.firstname} ${c.name}`,
           'Marie Dubois'
         );
