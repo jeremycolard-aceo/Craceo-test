@@ -110,8 +110,8 @@ function App() {
       id: 4,
       type: 'cra_submit',
       title: 'CRA Validation Submitted',
-      message: 'The CRA **BOOND** for **October** has been submitted by **Nicolas Sanchez**.',
-      author: 'Nicolas Sanchez',
+      message: 'The CRA **BOOND** for **October** has been validated by **Marie Dubois** for the consultant **Nicolas Sanchez**.',
+      author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 7200000, // 2h ago
       read: false
