@@ -10,7 +10,7 @@ export default function Sidebar({ currentView, setCurrentView }) {
           onClick={() => setCurrentView('validations')}
         >
           <CheckSquare size={18} />
-          <span>CRAs Validations</span>
+          <span>Timesheet And Invoice Validations</span>
         </div>
         <div 
           className={`menu-item ${currentView === 'consultants' ? 'active' : ''}`}

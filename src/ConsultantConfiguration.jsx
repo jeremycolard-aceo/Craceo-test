@@ -257,6 +257,7 @@ export default function ConsultantConfiguration({
         <div>
           <div className="breadcrumb">MANAGEMENT › CONSULTANT SETUP</div>
           <h1 className="page-title">Consultant Configuration</h1>
+          <p className="text-muted text-sm mt-2">Assign CRAs and projects to each consultant.</p>
         </div>
         <div className="flex gap-3">
           <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

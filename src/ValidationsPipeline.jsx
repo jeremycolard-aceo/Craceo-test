@@ -254,7 +254,7 @@ export default function ValidationsPipeline({
     <div className="page-content flex flex-col h-full">
       <div className="page-header flex justify-between items-center mb-6">
         <div>
-          <h1 className="page-title">Timesheet Validations</h1>
+          <h1 className="page-title">Timesheet And Invoice Validations</h1>
           <p className="text-muted text-sm mt-2">Review and manage consultant timesheets across billing stages.</p>
         </div>
         <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
