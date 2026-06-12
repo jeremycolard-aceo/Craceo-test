@@ -32,7 +32,7 @@ export default function Sidebar({ currentView, setCurrentView }) {
       <div className="sidebar-footer-menu">
         <div 
           className={`menu-item ${currentView === 'settings' ? 'active' : ''}`}
-          onClick={() => {}}
+          onClick={() => setCurrentView('settings')}
         >
           <Settings size={18} />
           <span>Settings</span>

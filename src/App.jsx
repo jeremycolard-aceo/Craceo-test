@@ -4,6 +4,7 @@ import Topbar from './Topbar';
 import ConsultantConfiguration from './ConsultantConfiguration';
 import ValidationsPipeline from './ValidationsPipeline';
 import Notifications from './Notifications';
+import Settings from './Settings';
 import FilterSidebar from './FilterSidebar';
 import { mockConsultants } from './data';
 import './index.css';
@@ -34,6 +35,21 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
+
+  // Dark mode state
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   // In-memory consultants database state
   const [consultants, setConsultantsState] = useState(mockConsultants);
@@ -293,6 +309,12 @@ function App() {
               addNotification={addNotification}
               consultants={consultants}
               updateConsultant={updateConsultant}
+            />
+          )}
+          {currentView === 'settings' && (
+            <Settings 
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
             />
           )}
         </div>
