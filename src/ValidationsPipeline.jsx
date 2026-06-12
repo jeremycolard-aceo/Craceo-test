@@ -50,18 +50,34 @@ export default function ValidationsPipeline({
   const [bulkValidationModalOpen, setBulkValidationModalOpen] = useState(false);
 
   const handleBulkValidateConfirm = () => {
+    const selectedConsultants = bulkSelectedIds
+      .map(id => consultants.find(con => con.id === id))
+      .filter(Boolean);
+
+    if (selectedConsultants.length === 1) {
+      const con = selectedConsultants[0];
+      const employeeName = `${con.firstname} ${con.name}`;
+      addNotification(
+        'final',
+        'Validation Confirmed',
+        `The complete workflow for **${employeeName}** has been validated.`,
+        employeeName,
+        'Marie Dubois'
+      );
+    } else if (selectedConsultants.length > 1) {
+      const count = selectedConsultants.length;
+      const names = selectedConsultants.map(con => `${con.firstname} ${con.name}`);
+      addNotification(
+        'final',
+        'Validation Confirmed',
+        `The complete workflow for **${count}** consultants has been validated.`,
+        names.join(', '),
+        'Marie Dubois',
+        { consultantsList: names }
+      );
+    }
+
     bulkSelectedIds.forEach(id => {
-      const consultant = consultants.find(con => con.id === id);
-      if (consultant) {
-        const employeeName = `${consultant.firstname} ${consultant.name}`;
-        addNotification(
-          'final',
-          'Validation Confirmed',
-          `Final timesheet validation completed and folder archived for ${employeeName} by Marie Dubois (Bulk Action).`,
-          employeeName,
-          'Marie Dubois'
-        );
-      }
       updateConsultant(id, { archived: true });
     });
     setBulkSelectedIds([]);
@@ -144,7 +160,7 @@ export default function ValidationsPipeline({
       addNotification(
         'billing',
         'Action Confirmed',
-        `Invoice for ${selectedClient.name} marked as sent by Marie Dubois (Consultant: ${employeeName}).`,
+        `Invoice for **${selectedClient.name}** has been marked as sent by **Marie Dubois** for **${employeeName}**.`,
         employeeName,
         'Marie Dubois'
       );
@@ -164,9 +180,10 @@ export default function ValidationsPipeline({
     if (consultant && cra) {
       const willBeValidated = !cra.validated;
       const employeeName = `${consultant.firstname} ${consultant.name}`;
+      const monthStr = new Date(consultant.updatedAt || Date.now()).toLocaleString('en-US', { month: 'long' });
       const message = willBeValidated 
-        ? `CRA ${cra.name} for ${employeeName} has been validated by Marie Dubois.`
-        : `CRA ${cra.name} for ${employeeName} has been unvalidated for correction by Marie Dubois.`;
+        ? `The CRA **${cra.name}** for **${monthStr}** has been validated by **Marie Dubois** for **${employeeName}**.`
+        : `The CRA **${cra.name}** for **${monthStr}** has been unvalidated for correction by **Marie Dubois** for **${employeeName}**.`;
       addNotification(
         'cra',
         willBeValidated ? 'CRA Validated' : 'Validation Revoked',
@@ -196,7 +213,7 @@ export default function ValidationsPipeline({
       addNotification(
         'final',
         'Validation Confirmed',
-        `Final timesheet validation completed and folder archived for ${employeeName} by Marie Dubois.`,
+        `The complete workflow for **${employeeName}** has been validated.`,
         employeeName,
         'Marie Dubois'
       );

@@ -33,6 +33,7 @@ const parseBoldMessage = (text) => {
 export default function Notifications({ notifications }) {
   const [searchPerson, setSearchPerson] = useState('');
   const [filterType, setFilterType] = useState('All'); // 'All' | 'cra' | 'billing' | 'final' | 'undo'
+  const [activePopupList, setActivePopupList] = useState(null); // array of names or null
 
   // Filter notifications list
   const getFilteredNotifications = () => {
@@ -189,6 +190,26 @@ export default function Notifications({ notifications }) {
                 <p className="m-0 text-sm text-slate-600 leading-relaxed" style={{ wordBreak: 'break-word' }}>
                   {parseBoldMessage(n.message)}
                 </p>
+
+                {n.consultantsList && n.consultantsList.length > 2 && (
+                  <button 
+                    onClick={() => setActivePopupList(n.consultantsList)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#F97316',
+                      textDecoration: 'underline',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      padding: 0,
+                      marginTop: '6px',
+                      cursor: 'pointer',
+                      display: 'block'
+                    }}
+                  >
+                    View validated consultants ({n.consultantsList.length})
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -202,6 +223,73 @@ export default function Notifications({ notifications }) {
           </div>
         )}
       </div>
+
+      {/* Batch Validations Popup Modal */}
+      {activePopupList && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            width: '400px',
+            maxWidth: '90%',
+            padding: '1.5rem'
+          }}>
+            <h3 style={{
+              margin: '0 0 1rem 0',
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              color: 'var(--primary-color)',
+              borderBottom: '1px solid var(--border-color)',
+              paddingBottom: '0.75rem'
+            }}>
+              Validated Consultants Batch
+            </h3>
+            
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              The complete workflow for these {activePopupList.length} consultants was validated together:
+            </p>
+
+            <ul style={{
+              margin: 0,
+              padding: '0 0 0 1.25rem',
+              fontSize: '0.9rem',
+              color: 'var(--primary-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              {activePopupList.map((name, idx) => (
+                <li key={idx} style={{ fontWeight: 600 }}>{name}</li>
+              ))}
+            </ul>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setActivePopupList(null)}
+                style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -44,7 +44,7 @@ function App() {
       id: 1,
       type: 'undo',
       title: 'Action Cancelled',
-      message: 'CRA Rejection for Nicolas Sanchez has been undone.',
+      message: 'The last action concerning **Nicolas Sanchez** has been canceled.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 30000, // Just now
@@ -54,7 +54,7 @@ function App() {
       id: 2,
       type: 'billing',
       title: 'Action Confirmed',
-      message: 'Invoice for Air Liquide marked as sent by Marie Dubois.',
+      message: 'Invoice for **Air Liquide** has been marked as sent by **Marie Dubois** for **Nicolas Sanchez**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 300000, // 5m ago
@@ -64,7 +64,7 @@ function App() {
       id: 3,
       type: 'cra',
       title: 'Validation Revoked',
-      message: 'The CRA for Inetum (October) has been unvalidated for correction by Alexandre Rossi.',
+      message: 'The CRA **BOOND** for **October** has been unvalidated for correction by **Alexandre Rossi** for **Guillaume Duluc**.',
       author: 'Alexandre Rossi',
       employeeName: 'Guillaume Duluc',
       time: Date.now() - 900000, // 15m ago
@@ -74,7 +74,7 @@ function App() {
       id: 4,
       type: 'cra_submit',
       title: 'CRA Validation Submitted',
-      message: 'Nicolas Sanchez submitted a new CRA for the client Inetum. Please review for monthly closure.',
+      message: 'The CRA **BOOND** for **October** has been submitted by **Nicolas Sanchez**.',
       author: 'Nicolas Sanchez',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 7200000, // 2h ago
@@ -84,7 +84,7 @@ function App() {
       id: 5,
       type: 'alert',
       title: 'Mission Ending Alert',
-      message: 'Mission for Air Liquide is ending in 30 days. Action required for extension or resource reallocation.',
+      message: 'Mission for **Air Liquide** is ending in 30 days for **Nicolas Sanchez**.',
       author: 'System',
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 18000000, // 5h ago
@@ -94,7 +94,7 @@ function App() {
       id: 6,
       type: 'info',
       title: 'Monthly Billing Ready',
-      message: 'The monthly billing report for November is ready for review and export. All consultant hours have been synchronized.',
+      message: 'The monthly billing report for **November** is ready for review.',
       author: 'System',
       employeeName: 'System',
       time: Date.now() - 86400000, // 1d ago
@@ -102,7 +102,7 @@ function App() {
     }
   ]);
 
-  const addNotification = (type, title, message, employeeName, author = 'Marie Dubois') => {
+  const addNotification = (type, title, message, employeeName, author = 'Marie Dubois', extra = {}) => {
     setNotifications(prev => [
       {
         id: Date.now() + Math.random(),
@@ -112,7 +112,8 @@ function App() {
         author,
         employeeName,
         time: Date.now(),
-        read: false
+        read: false,
+        ...extra
       },
       ...prev
     ]);
@@ -129,7 +130,7 @@ function App() {
         addNotification(
           'undo',
           'Action Cancelled',
-          `Last modification for ${c.firstname} ${c.name} has been undone by Marie Dubois.`,
+          `The last action concerning **${c.firstname} ${c.name}** has been canceled.`,
           `${c.firstname} ${c.name}`,
           'Marie Dubois'
         );
