@@ -107,6 +107,27 @@ function App() {
       read: false
     },
     {
+      id: 'final_validation_1',
+      type: 'final',
+      title: 'Validation Confirmed',
+      message: 'The complete workflow for **Nicolas Sanchez** has been validated.',
+      author: 'Marie Dubois',
+      employeeName: 'Nicolas Sanchez',
+      time: Date.now() - 400000, // 7m ago
+      read: false
+    },
+    {
+      id: 'final_validation_bulk_1',
+      type: 'final',
+      title: 'Validation Confirmed',
+      message: 'The complete workflow for **3** consultants has been validated.',
+      author: 'Marie Dubois',
+      employeeName: 'Multiple',
+      time: Date.now() - 600000, // 10m ago
+      read: false,
+      consultantsList: ['Nicolas Sanchez', 'Guillaume Duluc', 'Quentin Astarie']
+    },
+    {
       id: 4,
       type: 'cra_submit',
       title: 'CRA Validation Submitted',

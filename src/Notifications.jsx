@@ -69,6 +69,7 @@ export default function Notifications({ notifications }) {
           borderColor: '#F59E0B'
         };
       case 'billing':
+      case 'final':
         return {
           icon: <CheckCircle size={16} className="text-emerald-600" />,
           bgColor: '#D1FAE5',
