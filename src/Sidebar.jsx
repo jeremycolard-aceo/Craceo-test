@@ -1,17 +1,23 @@
 import React from 'react';
-import { Settings, Users, Bell, Info, MessageSquare, LayoutGrid } from 'lucide-react';
+import { Settings, Users, Bell, LogOut, CheckSquare, ListTodo } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
   return (
     <div className="sidebar">
       <div className="sidebar-menu">
-        <div className="menu-section">Management</div>
+        <div 
+          className={`menu-item ${currentView === 'todo' ? 'active' : ''}`}
+          onClick={() => setCurrentView('validations')} // Fallback to validations for now
+        >
+          <ListTodo size={18} />
+          <span>To Do</span>
+        </div>
         <div 
           className={`menu-item ${currentView === 'validations' ? 'active' : ''}`}
           onClick={() => setCurrentView('validations')}
         >
-          <Settings size={18} />
-          <span>Timesheet Validations</span>
+          <CheckSquare size={18} />
+          <span>CRAs Validations</span>
         </div>
         <div 
           className={`menu-item ${currentView === 'consultants' ? 'active' : ''}`}
@@ -21,28 +27,30 @@ export default function Sidebar({ currentView, setCurrentView }) {
           <span>Consultant Configuration</span>
         </div>
 
-        <div className="menu-item mt-2">
+        <div 
+          className={`menu-item ${currentView === 'notifications' ? 'active' : ''}`}
+          onClick={() => setCurrentView('notifications')}
+        >
           <Bell size={18} />
           <span>Notifications</span>
         </div>
-
-        <div className="menu-section mt-6">Support</div>
-        <div className="menu-item">
-          <Info size={18} />
-          <span>About</span>
-        </div>
-        <div className="menu-item">
-          <MessageSquare size={18} />
-          <span>Feedback</span>
-        </div>
-        <div className="menu-item">
-          <LayoutGrid size={18} />
-          <span>App Gallery</span>
-        </div>
       </div>
 
-      <div className="sidebar-footer">
-        © 2026 CRACEO V2.01
+      <div className="sidebar-footer-menu">
+        <div 
+          className={`menu-item ${currentView === 'settings' ? 'active' : ''}`}
+          onClick={() => {}}
+        >
+          <Settings size={18} />
+          <span>Settings</span>
+        </div>
+        <div 
+          className="menu-item"
+          onClick={() => {}}
+        >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </div>
       </div>
     </div>
   );

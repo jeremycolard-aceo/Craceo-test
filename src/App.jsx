@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import ConsultantConfiguration from './ConsultantConfiguration';
 import ValidationsPipeline from './ValidationsPipeline';
+import Notifications from './Notifications';
 import FilterSidebar from './FilterSidebar';
 import { mockConsultants } from './data';
 import './index.css';
@@ -37,6 +38,86 @@ function App() {
   // In-memory consultants database state
   const [consultants, setConsultantsState] = useState(mockConsultants);
 
+  // In-memory notifications log database state
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: 'undo',
+      title: 'Action Cancelled',
+      message: 'CRA Rejection for Nicolas Sanchez has been undone.',
+      author: 'Marie Dubois',
+      employeeName: 'Nicolas Sanchez',
+      time: Date.now() - 30000, // Just now
+      read: true
+    },
+    {
+      id: 2,
+      type: 'billing',
+      title: 'Action Confirmed',
+      message: 'Invoice for Air Liquide marked as sent by Marie Dubois.',
+      author: 'Marie Dubois',
+      employeeName: 'Nicolas Sanchez',
+      time: Date.now() - 300000, // 5m ago
+      read: false
+    },
+    {
+      id: 3,
+      type: 'cra',
+      title: 'Validation Revoked',
+      message: 'The CRA for Inetum (October) has been unvalidated for correction by Alexandre Rossi.',
+      author: 'Alexandre Rossi',
+      employeeName: 'Guillaume Duluc',
+      time: Date.now() - 900000, // 15m ago
+      read: false
+    },
+    {
+      id: 4,
+      type: 'cra_submit',
+      title: 'CRA Validation Submitted',
+      message: 'Nicolas Sanchez submitted a new CRA for the client Inetum. Please review for monthly closure.',
+      author: 'Nicolas Sanchez',
+      employeeName: 'Nicolas Sanchez',
+      time: Date.now() - 7200000, // 2h ago
+      read: false
+    },
+    {
+      id: 5,
+      type: 'alert',
+      title: 'Mission Ending Alert',
+      message: 'Mission for Air Liquide is ending in 30 days. Action required for extension or resource reallocation.',
+      author: 'System',
+      employeeName: 'Nicolas Sanchez',
+      time: Date.now() - 18000000, // 5h ago
+      read: false
+    },
+    {
+      id: 6,
+      type: 'info',
+      title: 'Monthly Billing Ready',
+      message: 'The monthly billing report for November is ready for review and export. All consultant hours have been synchronized.',
+      author: 'System',
+      employeeName: 'System',
+      time: Date.now() - 86400000, // 1d ago
+      read: true
+    }
+  ]);
+
+  const addNotification = (type, title, message, employeeName, author = 'Marie Dubois') => {
+    setNotifications(prev => [
+      {
+        id: Date.now() + Math.random(),
+        type,
+        title,
+        message,
+        author,
+        employeeName,
+        time: Date.now(),
+        read: false
+      },
+      ...prev
+    ]);
+  };
+
   // Undo action for a specific consultant
   const handleUndo = (consultantId) => {
     setConsultantsState(prev => prev.map(c => {
@@ -44,6 +125,15 @@ function App() {
         if (!c.history || c.history.length === 0) return c;
         const lastState = c.history[c.history.length - 1];
         const remainingHistory = c.history.slice(0, -1);
+
+        addNotification(
+          'undo',
+          'Action Cancelled',
+          `Last modification for ${c.firstname} ${c.name} has been undone by Marie Dubois.`,
+          `${c.firstname} ${c.name}`,
+          'Marie Dubois'
+        );
+
         return {
           ...lastState,
           history: remainingHistory,
@@ -172,6 +262,16 @@ function App() {
               filteredConsultants={filteredConsultants}
               onOpenFilter={() => setIsFilterOpen(true)}
               handleUndo={handleUndo}
+              addNotification={addNotification}
+            />
+          )}
+          {currentView === 'notifications' && (
+            <Notifications 
+              notifications={notifications}
+              setNotifications={setNotifications}
+              addNotification={addNotification}
+              consultants={consultants}
+              updateConsultant={updateConsultant}
             />
           )}
         </div>

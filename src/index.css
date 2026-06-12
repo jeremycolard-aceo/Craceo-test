@@ -145,10 +145,10 @@ body {
   font-weight: 600;
 }
 
-.sidebar-footer {
-  padding: 1.5rem;
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.4);
+.sidebar-footer-menu {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 1rem 0;
+  margin-top: auto;
 }
 
 .main-content {
@@ -933,6 +933,69 @@ body {
 
 .badge-blue:hover {
   background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Notifications page styles */
+.notifications-tabs-container {
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.notifications-tabs {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.notif-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.notif-tab:hover {
+  color: var(--primary-color);
+}
+
+.notif-tab.active {
+  border-bottom-color: var(--accent-color);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.tab-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background-color: #E2E8F0;
+  color: var(--text-main);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.unread-badge {
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
+.notification-card:hover {
+  background-color: #F8FAFC !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.notification-card.unread {
+  background-color: #FDFDFD;
 }
 
 

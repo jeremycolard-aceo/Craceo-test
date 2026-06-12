@@ -36,7 +36,8 @@ export default function ValidationsPipeline({
   filteredConsultants, 
   onOpenFilter,
   handleUndo,
-  canUndo 
+  canUndo,
+  addNotification
 }) {
   const [selectedClient, setSelectedClient] = useState(null); // Local copy of client being edited
   const [selectedConsultant, setSelectedConsultant] = useState(null);
@@ -50,6 +51,17 @@ export default function ValidationsPipeline({
 
   const handleBulkValidateConfirm = () => {
     bulkSelectedIds.forEach(id => {
+      const consultant = consultants.find(con => con.id === id);
+      if (consultant) {
+        const employeeName = `${consultant.firstname} ${consultant.name}`;
+        addNotification(
+          'final',
+          'Validation Confirmed',
+          `Final timesheet validation completed and folder archived for ${employeeName} by Marie Dubois (Bulk Action).`,
+          employeeName,
+          'Marie Dubois'
+        );
+      }
       updateConsultant(id, { archived: true });
     });
     setBulkSelectedIds([]);
@@ -128,6 +140,14 @@ export default function ValidationsPipeline({
         ...selectedClient,
         sent: true
       };
+      const employeeName = `${selectedConsultant.firstname} ${selectedConsultant.name}`;
+      addNotification(
+        'billing',
+        'Action Confirmed',
+        `Invoice for ${selectedClient.name} marked as sent by Marie Dubois (Consultant: ${employeeName}).`,
+        employeeName,
+        'Marie Dubois'
+      );
       updateConsultant(selectedConsultant.id, (c) => ({
         clients: c.clients.map(cli => 
           cli.id === selectedClient.id ? updatedClient : cli
@@ -139,6 +159,22 @@ export default function ValidationsPipeline({
 
   // Toggle CRA validation status
   const toggleCRAValidation = (consultantId, craId) => {
+    const consultant = consultants.find(con => con.id === consultantId);
+    const cra = consultant?.cras?.find(c => c.id === craId);
+    if (consultant && cra) {
+      const willBeValidated = !cra.validated;
+      const employeeName = `${consultant.firstname} ${consultant.name}`;
+      const message = willBeValidated 
+        ? `CRA ${cra.name} for ${employeeName} has been validated by Marie Dubois.`
+        : `CRA ${cra.name} for ${employeeName} has been unvalidated for correction by Marie Dubois.`;
+      addNotification(
+        'cra',
+        willBeValidated ? 'CRA Validated' : 'Validation Revoked',
+        message,
+        employeeName,
+        'Marie Dubois'
+      );
+    }
     updateConsultant(consultantId, (c) => ({
       cras: c.cras.map(cra => 
         cra.id === craId ? { ...cra, validated: !cra.validated } : cra
@@ -156,6 +192,14 @@ export default function ValidationsPipeline({
 
   const handleValidateConfirm = () => {
     if (validationModal.consultant) {
+      const employeeName = `${validationModal.consultant.firstname} ${validationModal.consultant.name}`;
+      addNotification(
+        'final',
+        'Validation Confirmed',
+        `Final timesheet validation completed and folder archived for ${employeeName} by Marie Dubois.`,
+        employeeName,
+        'Marie Dubois'
+      );
       updateConsultant(validationModal.consultant.id, { archived: true });
     }
     setValidationModal({ isOpen: false, consultant: null });
