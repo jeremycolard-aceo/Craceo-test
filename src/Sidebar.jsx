@@ -1,17 +1,10 @@
 import React from 'react';
-import { Settings, Users, Bell, LogOut, CheckSquare, ListTodo } from 'lucide-react';
+import { Settings, Users, Bell, LogOut, CheckSquare } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
   return (
     <div className="sidebar">
       <div className="sidebar-menu">
-        <div 
-          className={`menu-item ${currentView === 'todo' ? 'active' : ''}`}
-          onClick={() => setCurrentView('validations')} // Fallback to validations for now
-        >
-          <ListTodo size={18} />
-          <span>To Do</span>
-        </div>
         <div 
           className={`menu-item ${currentView === 'validations' ? 'active' : ''}`}
           onClick={() => setCurrentView('validations')}

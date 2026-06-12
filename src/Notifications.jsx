@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, CheckCircle, Undo, FileText, Hourglass, Search, Bell, Check } from 'lucide-react';
+import { Info, CheckCircle, Undo, FileText, Hourglass, Search, Bell } from 'lucide-react';
 
 // Relative time formatter helper
 const formatTimeAgo = (timestamp) => {
@@ -30,79 +30,14 @@ const parseBoldMessage = (text) => {
   });
 };
 
-export default function Notifications({ 
-  notifications, 
-  setNotifications, 
-  addNotification,
-  consultants,
-  updateConsultant 
-}) {
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'unread' | 'mentions'
+export default function Notifications({ notifications }) {
   const [searchPerson, setSearchPerson] = useState('');
   const [filterType, setFilterType] = useState('All'); // 'All' | 'cra' | 'billing' | 'final' | 'undo'
-
-  // Mark all notifications as read
-  const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  // Mark single notification as read
-  const handleMarkRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-
-  // Handle Interactive CRA Approval from notification card
-  const handleApproveCRA = (notification) => {
-    // Find consultant by employeeName
-    const nameParts = notification.employeeName.split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' ');
-    
-    const consultant = consultants.find(c => 
-      c.firstname.toLowerCase() === firstName.toLowerCase() &&
-      c.name.toLowerCase() === lastName.toLowerCase()
-    );
-
-    if (consultant) {
-      // Validate all unvalidated CRAs for this consultant
-      const updatedCras = consultant.cras.map(cra => ({ ...cra, validated: true }));
-      updateConsultant(consultant.id, { cras: updatedCras });
-      
-      // Update this notification to reflect approval
-      setNotifications(prev => prev.map(n => {
-        if (n.id === notification.id) {
-          return {
-            ...n,
-            read: true,
-            message: `CRA for **${notification.employeeName}** has been approved by **Marie Dubois**.`
-          };
-        }
-        return n;
-      }));
-
-      // Log CRA validated action
-      addNotification(
-        'cra',
-        'CRA Validated',
-        `CRA for **${notification.employeeName}** validated by **Marie Dubois** (via Notifications Approve).`,
-        notification.employeeName,
-        'Marie Dubois'
-      );
-    }
-  };
 
   // Filter notifications list
   const getFilteredNotifications = () => {
     return notifications.filter(n => {
-      // 1. Tab Filter
-      if (activeTab === 'unread' && n.read) return false;
-      if (activeTab === 'mentions') {
-        // Mentions filter: notifications where Marie Dubois is mentioned or system alerts related directly to her team
-        const containsMention = n.message.toLowerCase().includes('marie dubois') || n.author === 'System';
-        if (!containsMention) return false;
-      }
-
-      // 2. Search Person Filter (checks actor/author or employee/consultant name)
+      // 1. Search Person Filter (checks actor/author or employee/consultant name)
       if (searchPerson) {
         const query = searchPerson.toLowerCase();
         const matchesAuthor = n.author?.toLowerCase().includes(query);
@@ -110,7 +45,7 @@ export default function Notifications({
         if (!matchesAuthor && !matchesEmployee) return false;
       }
 
-      // 3. Type Filter
+      // 2. Type Filter
       if (filterType !== 'All') {
         if (filterType === 'cra' && n.type !== 'cra' && n.type !== 'cra_submit') return false;
         if (filterType === 'billing' && n.type !== 'billing') return false;
@@ -123,7 +58,6 @@ export default function Notifications({
   };
 
   const filteredNotifications = getFilteredNotifications();
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -173,33 +107,6 @@ export default function Notifications({
           <h1 className="page-title">Notifications</h1>
           <p className="text-muted text-sm mt-2">Stay updated on your team's activity and system alerts.</p>
         </div>
-        <button className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }} onClick={handleMarkAllRead}>
-          <Check size={16} /> Mark all as read
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="notifications-tabs-container">
-        <div className="notifications-tabs">
-          <button 
-            className={`notif-tab ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            All <span className="tab-count-badge">{notifications.length}</span>
-          </button>
-          <button 
-            className={`notif-tab ${activeTab === 'unread' ? 'active' : ''}`}
-            onClick={() => setActiveTab('unread')}
-          >
-            Unread {unreadCount > 0 && <span className="tab-count-badge unread-badge">{unreadCount}</span>}
-          </button>
-          <button 
-            className={`notif-tab ${activeTab === 'mentions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('mentions')}
-          >
-            Mentions
-          </button>
-        </div>
       </div>
 
       {/* Filters bar */}
@@ -239,7 +146,7 @@ export default function Notifications({
           return (
             <div 
               key={n.id}
-              className={`notification-card ${!n.read ? 'unread' : ''}`}
+              className="notification-card"
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -251,9 +158,8 @@ export default function Notifications({
                 padding: '1.25rem',
                 position: 'relative',
                 transition: 'all 0.2s ease',
-                cursor: 'pointer'
+                cursor: 'default'
               }}
-              onClick={() => handleMarkRead(n.id)}
             >
               {/* Icon container */}
               <div style={{
@@ -283,59 +189,7 @@ export default function Notifications({
                 <p className="m-0 text-sm text-slate-600 leading-relaxed" style={{ wordBreak: 'break-word' }}>
                   {parseBoldMessage(n.message)}
                 </p>
-
-                {/* Interactive buttons for CRA submission */}
-                {n.type === 'cra_submit' && !n.message.includes('approved') && (
-                  <div className="flex gap-2 mt-3">
-                    <button 
-                      className="btn" 
-                      style={{
-                        padding: '4px 12px',
-                        fontSize: '0.75rem',
-                        backgroundColor: '#F8B335',
-                        color: 'var(--primary-color)',
-                        fontWeight: 600,
-                        border: 'none',
-                        borderRadius: '4px'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleApproveCRA(n);
-                      }}
-                    >
-                      Approve
-                    </button>
-                    <button 
-                      className="btn btn-outline" 
-                      style={{
-                        padding: '4px 12px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        height: 'auto'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMarkRead(n.id);
-                      }}
-                    >
-                      View Details
-                    </button>
-                  </div>
-                )}
               </div>
-
-              {/* Unread indicator dot */}
-              {!n.read && (
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#D97706',
-                  position: 'absolute',
-                  right: '1.25rem',
-                  bottom: '1.25rem'
-                }} />
-              )}
             </div>
           );
         })}
