@@ -125,16 +125,6 @@ function App() {
       employeeName: 'Nicolas Sanchez',
       time: Date.now() - 18000000, // 5h ago
       read: false
-    },
-    {
-      id: 6,
-      type: 'info',
-      title: 'Monthly Billing Ready',
-      message: 'The monthly billing report for **November** is ready for review.',
-      author: 'System',
-      employeeName: 'System',
-      time: Date.now() - 86400000, // 1d ago
-      read: true
     }
   ]);
 

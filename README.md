@@ -128,11 +128,46 @@ Lors du passage d'une maquette frontend statique (état en mémoire) à une arch
 - **Tous les premiers du mois** : Une tâche planifiée (cron job) ou un déclencheur applicatif doit créer automatiquement de nouvelles cartes d'activité de feuille de temps (CRA) pour chaque consultant qui possède une mission/assignation client active sur le mois en cours.
 
 ### 2. Notifications & Alertes Automatiques de Fin de Mois
-- **Tous les premiers du mois** : Le serveur backend doit analyser les cartes du mois écoulé pour identifier les retards et déclencher trois notifications d'alerte globales sous les formats suivants :
-  - **CRAs en attente** :
-    - *Format* : `The CRAs of [List of Concerned Consultants] have not been validated.` (ex: `The CRAs of **Nicolas Sanchez** and **Guillaume Duluc** have not been validated.`)
-  - **Facturation/Invoices en attente** :
-    - *Format* : `The invoices for [List of Concerned Consultants] have not been sent.` (ex: `The invoices for **Guillaume Duluc** and **Quentin Astarie** have not been sent.`)
-  - **Validation Finale en attente** :
-    - *Format* : `The final validation for [List of Concerned Consultants] has not been completed.` (ex: `The final validation for **Nicolas Sanchez** has not been completed.`)
+- **Tous les premiers du mois** : Le serveur backend doit analyser les cartes du mois écoulé pour identifier les retards et déclencher trois notifications d'alerte globales (voir gabarits ci-dessous).
+
+### 3. Gabarits des Notifications Applicatives (Notification Templates)
+
+L'ensemble des notifications générées par les actions utilisateurs et les processus automatisés doit respecter les gabarits de messages textuels suivants (les placeholders doivent être entourés de doubles astérisques `**` pour le formatage en gras et en couleur dans l'interface) :
+
+#### A. Étape 1 : Validation de Feuille de Temps (CRA)
+- **Validation** :
+  `The CRA **[CRA Name]** for **[Month]** has been validated by **[Manager]** for **[Consultant]**.`
+  *Exemple* : `The CRA **BOOND** for **October** has been validated by **Marie Dubois** for the consultant **Nicolas Sanchez**.`
+- **Invalidation/Demande de Correction** :
+  `The CRA **[CRA Name]** for **[Month]** has been unvalidated for correction by **[Manager]** for **[Consultant]**.`
+
+#### B. Étape 2 : Envoi de la Facture (Billing)
+- **Validation de l'Envoi** :
+  `Invoice for **[Client/Project]** has been marked as sent by **[Manager]** for **[Consultant]**.`
+  *Exemple* : `Invoice for **Air Liquide** has been marked as sent by **Marie Dubois** for **Nicolas Sanchez**.`
+
+#### C. Étape 3 : Validation Finale & Archivage (Final Validation)
+- **Validation Individuelle** :
+  `The complete workflow for **[Consultant]** has been validated.`
+  *Exemple* : `The complete workflow for **Nicolas Sanchez** has been validated.`
+- **Validation Groupée (En Masse)** :
+  `The complete workflow for **[Number]** consultants has been validated.`
+  *Exemple* : `The complete workflow for **3** consultants has been validated.`
+  *Note* : Lorsque le nombre de consultants validés en masse est supérieur à 2, l'interface propose un lien cliquable orange permettant d'ouvrir un pop-up modal détaillant la liste complète des noms concernés.
+
+#### D. Actions d'Annulation (Undo Action)
+- **Restauration de l'état précédent** :
+  `The last action concerning **[Consultant]** has been canceled by **[Manager]**.`
+  *Exemple* : `The last action concerning **Nicolas Sanchez** has been canceled by **Marie Dubois**.`
+
+#### E. Alertes Mensuelles Systèmes (Tous les 1er du mois)
+- **CRAs en attente** :
+  `The CRAs of **[List of Concerned Consultants]** have not been validated.`
+  *Exemple* : `The CRAs of **Nicolas Sanchez** and **Guillaume Duluc** have not been validated.`
+- **Factures/Invoices en attente** :
+  `The invoices for **[List of Concerned Consultants]** have not been sent.`
+  *Exemple* : `The invoices for **Guillaume Duluc** and **Quentin Astarie** have not been sent.`
+- **Validations Finales en attente** :
+  `The final validation for **[List of Concerned Consultants]** has not been completed.`
+  *Exemple* : `The final validation for **Nicolas Sanchez** has not been completed.`
 
