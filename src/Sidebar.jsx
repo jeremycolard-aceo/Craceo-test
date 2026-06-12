@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Users, Bell, LogOut, CheckSquare } from 'lucide-react';
+import { Users, Bell, LogOut, CheckSquare } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
   return (
@@ -30,13 +30,6 @@ export default function Sidebar({ currentView, setCurrentView }) {
       </div>
 
       <div className="sidebar-footer-menu">
-        <div 
-          className={`menu-item ${currentView === 'settings' ? 'active' : ''}`}
-          onClick={() => setCurrentView('settings')}
-        >
-          <Settings size={18} />
-          <span>Settings</span>
-        </div>
         <div 
           className="menu-item"
           onClick={() => {}}

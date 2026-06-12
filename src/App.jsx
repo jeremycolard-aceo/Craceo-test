@@ -4,7 +4,7 @@ import Topbar from './Topbar';
 import ConsultantConfiguration from './ConsultantConfiguration';
 import ValidationsPipeline from './ValidationsPipeline';
 import Notifications from './Notifications';
-import Settings from './Settings';
+
 import FilterSidebar from './FilterSidebar';
 import { mockConsultants } from './data';
 import './index.css';
@@ -36,20 +36,11 @@ function App() {
     }
   }, [toast]);
 
-  // Dark mode state
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
-
+  // Clean up any remaining dark mode settings
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark-theme');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark-theme');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
+    document.documentElement.classList.remove('dark-theme');
+    localStorage.removeItem('theme');
+  }, []);
 
   // In-memory consultants database state
   const [consultants, setConsultantsState] = useState(mockConsultants);
@@ -322,12 +313,7 @@ function App() {
               updateConsultant={updateConsultant}
             />
           )}
-          {currentView === 'settings' && (
-            <Settings 
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-            />
-          )}
+
         </div>
       </div>
 
