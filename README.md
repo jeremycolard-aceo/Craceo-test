@@ -117,3 +117,22 @@ Pour lancer le projet sur votre propre machine :
 ├── vite.config.js                 # Configuration Vite avec Base Path pour GitHub Pages
 └── package.json                   # Dépendances et scripts de build
 ```
+
+---
+
+## 🔮 Spécifications Backend Futures (Roadmap)
+
+Lors du passage d'une maquette frontend statique (état en mémoire) à une architecture client-serveur avec base de données (ex: Cloud SQL), veuillez implémenter les fonctionnalités backend automatisées suivantes :
+
+### 1. Génération Mensuelle des Cartes de Validation
+- **Tous les premiers du mois** : Une tâche planifiée (cron job) ou un déclencheur applicatif doit créer automatiquement de nouvelles cartes d'activité de feuille de temps (CRA) pour chaque consultant qui possède une mission/assignation client active sur le mois en cours.
+
+### 2. Notifications & Alertes Automatiques de Fin de Mois
+- **Tous les premiers du mois** : Le serveur backend doit analyser les cartes du mois écoulé pour identifier les retards et déclencher trois notifications d'alerte globales sous les formats suivants :
+  - **CRAs en attente** :
+    - *Format* : `The CRAs of [List of Concerned Consultants] have not been validated.` (ex: `The CRAs of **Nicolas Sanchez** and **Guillaume Duluc** have not been validated.`)
+  - **Facturation/Invoices en attente** :
+    - *Format* : `The invoices for [List of Concerned Consultants] have not been sent.` (ex: `The invoices for **Guillaume Duluc** and **Quentin Astarie** have not been sent.`)
+  - **Validation Finale en attente** :
+    - *Format* : `The final validation for [List of Concerned Consultants] has not been completed.` (ex: `The final validation for **Nicolas Sanchez** has not been completed.`)
+

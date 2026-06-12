@@ -41,6 +41,36 @@ function App() {
   // In-memory notifications log database state
   const [notifications, setNotifications] = useState([
     {
+      id: 'month_alert_cra',
+      type: 'alert',
+      title: 'Monthly CRA Alert',
+      message: 'The CRAs of **Nicolas Sanchez** and **Guillaume Duluc** have not been validated.',
+      author: 'System',
+      employeeName: 'Multiple',
+      time: Date.now() - 10000,
+      read: false
+    },
+    {
+      id: 'month_alert_billing',
+      type: 'alert',
+      title: 'Monthly Billing Alert',
+      message: 'The invoices for **Guillaume Duluc** and **Quentin Astarie** have not been sent.',
+      author: 'System',
+      employeeName: 'Multiple',
+      time: Date.now() - 12000,
+      read: false
+    },
+    {
+      id: 'month_alert_final',
+      type: 'alert',
+      title: 'Monthly Final Validation Alert',
+      message: 'The final validation for **Nicolas Sanchez** has not been completed.',
+      author: 'System',
+      employeeName: 'Multiple',
+      time: Date.now() - 14000,
+      read: false
+    },
+    {
       id: 1,
       type: 'undo',
       title: 'Action Cancelled',
