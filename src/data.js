@@ -5,6 +5,7 @@ export const mockConsultants = [
     name: "Sanchez",
     role: "Senior Project Manager",
     initials: "NS",
+    muted: false,
     cras: [
       { id: 'cra2', name: "BOOND", validated: true }
     ],
@@ -18,12 +19,14 @@ export const mockConsultants = [
         managerName: "Jean-Pierre Lambert",
         billingCycle: "Monthly",
         managerEmail: "j.lambert@veolia.com",
+        billingManagers: ["j.lambert@veolia.com"],
         phone: "+33 1 23 45 67 89",
         poNumber: "VE-2024-MAINT-FR-004",
         orderEndDate: "2024-12-31",
         poUploaded: false,
         poFileName: "",
-        sent: false
+        sent: false,
+        muted: false
       }
     ],
     incomingDay: "2023-01-15",
@@ -44,6 +47,7 @@ export const mockConsultants = [
     name: "Duluc",
     role: "Strategy Consultant",
     initials: "GD",
+    muted: false,
     cras: [
       { id: 'cra4', name: "CRA BOOND", validated: true }
     ],
@@ -57,12 +61,14 @@ export const mockConsultants = [
         managerName: "Luc Martin",
         billingCycle: "Monthly",
         managerEmail: "luc.martin@globaltech.com",
+        billingManagers: ["luc.martin@globaltech.com"],
         phone: "+33 1 11 22 33 44",
         poNumber: "GT-2024-11",
         orderEndDate: "2025-10-31",
         poUploaded: false,
         poFileName: "",
-        sent: false
+        sent: false,
+        muted: false
       }
     ],
     incomingDay: "2024-03-01",
@@ -83,6 +89,7 @@ export const mockConsultants = [
     name: "Astarie",
     role: "DevOps Architect",
     initials: "QA",
+    muted: false,
     cras: [
       { id: 'cra6', name: "BOOND", validated: true }
     ],

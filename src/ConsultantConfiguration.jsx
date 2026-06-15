@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreHorizontal, PlusCircle, Trash2, X, Save, Eye } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, X, Save, Eye, BellOff } from 'lucide-react';
 
 const getInitials = (firstname, lastname) => {
   const f = firstname ? firstname.charAt(0).toUpperCase() : "";
@@ -20,6 +20,8 @@ export default function ConsultantConfiguration({
   const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of consultant card menu open
   const [viewingInvoiceHistoryConsultant, setViewingInvoiceHistoryConsultant] = useState(null); // Consultant profile for invoice history panel
   const [previewingFile, setPreviewingFile] = useState(null); // File name of the invoice currently being previewed
+  const [newBillingEmail, setNewBillingEmail] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
 
   // Custom Modal State
   const [modal, setModal] = useState({
@@ -35,10 +37,29 @@ export default function ConsultantConfiguration({
     managerName: '',
     billingCycle: 'Monthly',
     managerEmail: '',
+    billingManagers: [],
     phone: '',
     poNumber: '',
-    orderEndDate: ''
+    orderEndDate: '',
+    muted: false
   });
+
+  const handleAddBillingEmail = () => {
+    if (newBillingEmail.trim() && newBillingEmail.includes('@')) {
+      setModal(prev => ({
+        ...prev,
+        billingManagers: [...(prev.billingManagers || []), newBillingEmail.trim()]
+      }));
+      setNewBillingEmail('');
+    }
+  };
+
+  const handleRemoveBillingEmail = (index) => {
+    setModal(prev => ({
+      ...prev,
+      billingManagers: prev.billingManagers.filter((_, i) => i !== index)
+    }));
+  };
 
   const closeModal = () => {
     setModal({
@@ -54,10 +75,13 @@ export default function ConsultantConfiguration({
       managerName: '',
       billingCycle: 'Monthly',
       managerEmail: '',
+      billingManagers: [],
       phone: '',
       poNumber: '',
-      orderEndDate: ''
+      orderEndDate: '',
+      muted: false
     });
+    setNewBillingEmail('');
   };
 
   // Create empty consultant template
@@ -69,6 +93,7 @@ export default function ConsultantConfiguration({
       firstname: "",
       role: "Consultant",
       initials: "NEW",
+      muted: false,
       cras: [{ id: 'cra_boond_' + Date.now(), name: "BOOND", validated: false }],
       assignments: [],
       clients: [],
@@ -111,8 +136,6 @@ export default function ConsultantConfiguration({
     setCreatingConsultant(false);
   };
 
-
-
   const openAddAssignmentModal = (consultantId) => {
     const today = new Date().toISOString().split('T')[0];
     setModal({
@@ -128,14 +151,17 @@ export default function ConsultantConfiguration({
       managerName: '',
       billingCycle: 'Monthly',
       managerEmail: '',
+      billingManagers: [],
       phone: '',
       poNumber: '',
-      orderEndDate: today
+      orderEndDate: today,
+      muted: false
     });
   };
 
   const openEditAssignmentModal = (consultant, ass) => {
     const clientRecord = consultant.clients?.find(c => c.id === ass.id) || {};
+    const existingEmails = clientRecord.billingManagers || (clientRecord.managerEmail ? [clientRecord.managerEmail] : []);
     setModal({
       isOpen: true,
       type: 'assignmentDetail',
@@ -149,9 +175,11 @@ export default function ConsultantConfiguration({
       managerName: clientRecord.managerName || '',
       billingCycle: clientRecord.billingCycle || 'Monthly',
       managerEmail: clientRecord.managerEmail || '',
+      billingManagers: existingEmails,
       phone: clientRecord.phone || '',
       poNumber: clientRecord.poNumber || '',
-      orderEndDate: clientRecord.orderEndDate || ''
+      orderEndDate: clientRecord.orderEndDate || '',
+      muted: clientRecord.muted || false
     });
   };
 
@@ -167,7 +195,9 @@ export default function ConsultantConfiguration({
         client: modal.client.trim(),
         startDate: modal.startDate || new Date().toISOString().split('T')[0],
         endDate: modal.endDate || new Date().toISOString().split('T')[0],
-        craName: modal.craName.trim()
+        craName: modal.craName.trim(),
+        muted: modal.muted || false,
+        billingManagers: modal.billingManagers || []
       };
       
       const existingClient = c.clients?.find(cli => cli.id === assId) || {};
@@ -176,13 +206,15 @@ export default function ConsultantConfiguration({
         name: modal.client.trim(),
         managerName: modal.managerName.trim(),
         billingCycle: modal.billingCycle,
-        managerEmail: modal.managerEmail.trim(),
+        managerEmail: modal.billingManagers && modal.billingManagers.length > 0 ? modal.billingManagers[0] : (modal.managerEmail || ""),
+        billingManagers: modal.billingManagers || [],
         phone: modal.phone.trim(),
         poNumber: modal.poNumber.trim(),
         orderEndDate: modal.orderEndDate || new Date().toISOString().split('T')[0],
         poUploaded: existingClient.poUploaded || false,
         poFileName: existingClient.poFileName || "",
-        sent: existingClient.sent || false
+        sent: existingClient.sent || false,
+        muted: modal.muted || false
       };
       
       let newAssignments;
@@ -259,7 +291,16 @@ export default function ConsultantConfiguration({
           <h1 className="page-title">Consultant Configuration</h1>
           <p className="text-muted text-sm mt-2">Assign CRAs and projects to each consultant.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', marginRight: '1rem', color: 'var(--text-main)', fontWeight: 500 }}>
+            <input 
+              type="checkbox" 
+              checked={showArchived} 
+              onChange={e => setShowArchived(e.target.checked)}
+              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
+            />
+            <span>Afficher les archivés / partis</span>
+          </label>
           <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="6" x2="6" y1="12" y2="12"/><line x1="2" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="6" x2="6" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
             Filter
@@ -271,16 +312,24 @@ export default function ConsultantConfiguration({
       </div>
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        {filteredConsultants.map(consultant => {
+        {filteredConsultants.filter(c => showArchived || c.status === 'Active').map(consultant => {
           const hasHistory = consultant.history && consultant.history.length > 0;
           return (
-            <div key={consultant.id} className="card" style={{ width: '380px' }}>
+            <div key={consultant.id} className="card" style={{ width: '380px', opacity: consultant.status !== 'Active' ? 0.75 : 1 }}>
               <div className="card-header">
                 <div className="flex items-center gap-4">
                   <div className="avatar avatar-lg">{consultant.initials}</div>
                   <div>
                     <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
                       {consultant.firstname} {consultant.name}
+                      {consultant.muted && (
+                        <BellOff 
+                          size={14} 
+                          className="text-slate-400" 
+                          style={{ marginLeft: '6px', verticalAlign: 'middle' }} 
+                          title="Reminders muted for this consultant"
+                        />
+                      )}
                       {consultant.external && (
                         <span 
                           style={{ 
@@ -303,7 +352,14 @@ export default function ConsultantConfiguration({
                         </span>
                       )}
                     </h3>
-                    <p className="m-0 text-sm text-muted">{consultant.role}</p>
+                    <p className="m-0 text-sm text-muted" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                      {consultant.role}
+                      {consultant.status !== 'Active' && (
+                        <span className="badge" style={{ backgroundColor: '#F1F5F9', color: '#64748B', border: '1px solid #CBD5E1', textTransform: 'none', padding: '1px 6px', fontSize: '0.65rem' }}>
+                          {consultant.status === 'Left / Archived' ? 'Archivé / Parti' : consultant.status}
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <div style={{ position: 'relative' }}>
@@ -365,7 +421,10 @@ export default function ConsultantConfiguration({
                     {consultant.assignments.map(ass => (
                       <div key={ass.id} className="flex justify-between items-center p-2 rounded-md bg-slate-50 border border-slate-200 text-xs">
                         <div className="flex flex-col" style={{ minWidth: 0 }}>
-                          <span className="font-bold text-slate-800 text-ellipsis overflow-hidden whitespace-nowrap">{ass.client}</span>
+                          <span className="font-bold text-slate-800 text-ellipsis overflow-hidden whitespace-nowrap" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {ass.client}
+                            {ass.muted && <BellOff size={10} className="text-slate-400" title="Reminders muted for this project" />}
+                          </span>
                           <span className="text-slate-500">{ass.startDate} → {ass.endDate}</span>
                         </div>
                         <div className="flex gap-2">
@@ -485,6 +544,7 @@ export default function ConsultantConfiguration({
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                     <option value="On Leave">On Leave</option>
+                    <option value="Left / Archived">Archivé / Parti</option>
                   </select>
                 </div>
               </div>
@@ -498,6 +558,18 @@ export default function ConsultantConfiguration({
                     style={{ width: '18px', height: '18px', accentColor: 'var(--accent-color)', cursor: 'pointer' }}
                   />
                   <span>External Consultant</span>
+                </label>
+              </div>
+
+              <div className="form-group mb-0" style={{ marginTop: '0.5rem' }}>
+                <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={!!editingConsultant.muted} 
+                    onChange={e => setEditingConsultant({...editingConsultant, muted: e.target.checked})}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--accent-color)', cursor: 'pointer' }}
+                  />
+                  <span>Mettre en silence les rappels de CRA (Mute)</span>
                 </label>
               </div>
  
@@ -542,8 +614,8 @@ export default function ConsultantConfiguration({
                       <div className="text-xs text-muted flex flex-col gap-1">
                         <div><strong>PO Number:</strong> {cli.poNumber || "Not configured"}</div>
                         <div><strong>Billing Cycle:</strong> {cli.billingCycle || "Monthly"}</div>
-                        <div><strong>Manager Name:</strong> {cli.managerName || "N/A"}</div>
-                        <div><strong>Manager Email:</strong> {cli.managerEmail || "N/A"}</div>
+                        <div><strong>Nom du responsable:</strong> {cli.managerName || "N/A"}</div>
+                        <div><strong>Responsable de la facturation (E-mail):</strong> {cli.billingManagers && cli.billingManagers.length > 0 ? cli.billingManagers.join(', ') : (cli.managerEmail || "N/A")}</div>
                         <div><strong>Phone Number:</strong> {cli.phone || "N/A"}</div>
                         <div><strong>Order End Date:</strong> {cli.orderEndDate || "N/A"}</div>
                         
@@ -846,7 +918,7 @@ export default function ConsultantConfiguration({
                     {/* Right Column: Detailed Contact Info */}
                     <div className="flex-1 flex flex-col gap-4">
                       <div className="form-group mb-0">
-                        <label className="form-label">Manager Name</label>
+                        <label className="form-label">Nom du responsable de facturation</label>
                         <input 
                           type="text" 
                           className="form-input" 
@@ -856,14 +928,45 @@ export default function ConsultantConfiguration({
                         />
                       </div>
                       <div className="form-group mb-0">
-                        <label className="form-label">Manager Email</label>
-                        <input 
-                          type="email" 
-                          className="form-input" 
-                          placeholder="e.g. manager@client.com"
-                          value={modal.managerEmail} 
-                          onChange={e => setModal({ ...modal, managerEmail: e.target.value })}
-                        />
+                        <label className="form-label">Responsable de la facturation (E-mail)</label>
+                        <div className="flex gap-2 mb-2">
+                          <input 
+                            type="email" 
+                            className="form-input" 
+                            placeholder="e.g. manager@client.com"
+                            value={newBillingEmail} 
+                            onChange={e => setNewBillingEmail(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddBillingEmail();
+                              }
+                            }}
+                          />
+                          <button 
+                            type="button" 
+                            className="btn btn-outline"
+                            style={{ padding: '0 12px', height: '38px' }}
+                            onClick={handleAddBillingEmail}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="flex flex-col gap-1" style={{ maxHeight: '100px', overflowY: 'auto' }}>
+                          {(modal.billingManagers || []).map((email, idx) => (
+                            <div key={idx} className="flex justify-between items-center p-2 bg-slate-50 border border-slate-200 rounded-md text-xs">
+                              <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '180px' }}>{email}</span>
+                              <button 
+                                type="button" 
+                                className="text-red-500 hover:text-red-700" 
+                                style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '1rem', padding: '0 4px', lineHeight: 1 }}
+                                onClick={() => handleRemoveBillingEmail(idx)}
+                              >
+                                &times;
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="form-group mb-0">
                         <label className="form-label">Phone Number</label>
@@ -893,6 +996,17 @@ export default function ConsultantConfiguration({
                           value={modal.orderEndDate} 
                           onChange={e => setModal({ ...modal, orderEndDate: e.target.value })}
                         />
+                      </div>
+                      <div className="form-group mb-0" style={{ marginTop: '0.5rem' }}>
+                        <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: 500 }}>
+                          <input 
+                            type="checkbox" 
+                            checked={!!modal.muted} 
+                            onChange={e => setModal({ ...modal, muted: e.target.checked })}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
+                          />
+                          <span>Mettre en silence les rappels</span>
+                        </label>
                       </div>
                     </div>
                   </div>

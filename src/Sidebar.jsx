@@ -1,10 +1,17 @@
 import React from 'react';
-import { Users, Bell, LogOut, CheckSquare } from 'lucide-react';
+import { Users, Bell, LogOut, CheckSquare, User } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
   return (
     <div className="sidebar">
       <div className="sidebar-menu">
+        <div 
+          className={`menu-item ${currentView === 'me' ? 'active' : ''}`}
+          onClick={() => setCurrentView('me')}
+        >
+          <User size={18} />
+          <span>Mon Espace</span>
+        </div>
         <div 
           className={`menu-item ${currentView === 'validations' ? 'active' : ''}`}
           onClick={() => setCurrentView('validations')}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye } from 'lucide-react';
+import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye, BellOff } from 'lucide-react';
 
 // Relative time formatter helper
 const formatTimeAgo = (timestamp) => {
@@ -224,6 +224,7 @@ export default function ValidationsPipeline({
 
   // Classify consultants into pipeline columns
   const craConsultants = filteredConsultants.filter(c => 
+    c.status === 'Active' &&
     !c.archived && 
     c.cras && 
     c.cras.length > 0 && 
@@ -232,6 +233,7 @@ export default function ValidationsPipeline({
 
   // Moves to Billing if all CRAs are validated AND at least one ACTIVE client invoice is NOT sent yet
   const billingConsultants = filteredConsultants.filter(c => {
+    if (c.status !== 'Active') return false;
     if (c.archived) return false;
     const allCrasValidated = !c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated);
     if (!allCrasValidated) return false;
@@ -242,6 +244,7 @@ export default function ValidationsPipeline({
 
   // Moves to Validation if all CRAs are validated AND all ACTIVE client invoices are sent
   const validationConsultants = filteredConsultants.filter(c => {
+    if (c.status !== 'Active') return false;
     if (c.archived) return false;
     const allCrasValidated = !c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated);
     if (!allCrasValidated) return false;
@@ -275,6 +278,14 @@ export default function ValidationsPipeline({
                 <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', position: 'relative' }}>
                   <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
                     {c.firstname} {c.name}
+                    {c.muted && (
+                      <BellOff 
+                        size={14} 
+                        className="text-slate-400" 
+                        style={{ marginLeft: '6px', verticalAlign: 'middle' }} 
+                        title="Reminders muted"
+                      />
+                    )}
                     {c.external && (
                       <span 
                         style={{ 
@@ -358,6 +369,14 @@ export default function ValidationsPipeline({
                 <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', position: 'relative' }}>
                   <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
                     {c.firstname} {c.name}
+                    {c.muted && (
+                      <BellOff 
+                        size={14} 
+                        className="text-slate-400" 
+                        style={{ marginLeft: '6px', verticalAlign: 'middle' }} 
+                        title="Reminders muted"
+                      />
+                    )}
                     {c.external && (
                       <span 
                         style={{ 
@@ -427,8 +446,10 @@ export default function ValidationsPipeline({
                         className={`badge cursor-pointer ${badgeClass}`}
                         onClick={() => handleClientClick(c, client)}
                         title={title}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                       >
                         {prefix}{client.name}
+                        {client.muted && <BellOff size={10} style={{ color: 'inherit' }} title="Project reminders muted" />}
                       </span>
                     );
                   })}
@@ -557,6 +578,14 @@ export default function ValidationsPipeline({
                     )}
                     <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                       {c.firstname} {c.name}
+                      {c.muted && (
+                        <BellOff 
+                          size={14} 
+                          className="text-slate-400" 
+                          style={{ marginLeft: '6px', verticalAlign: 'middle' }} 
+                          title="Reminders muted"
+                        />
+                      )}
                       {c.external && (
                         <span 
                           style={{ 
