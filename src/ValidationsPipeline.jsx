@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye, BellOff } from 'lucide-react';
+import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye, EyeOff, BellOff } from 'lucide-react';
 
 // Relative time formatter helper
 const formatTimeAgo = (timestamp) => {
@@ -48,6 +48,8 @@ export default function ValidationsPipeline({
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkSelectedIds, setBulkSelectedIds] = useState([]);
   const [bulkValidationModalOpen, setBulkValidationModalOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState('All');
+  const [showArchives, setShowArchives] = useState(false);
 
   const handleBulkValidateConfirm = () => {
     const selectedConsultants = bulkSelectedIds
@@ -222,8 +224,15 @@ export default function ValidationsPipeline({
     setValidationModal({ isOpen: false, consultant: null });
   };
 
+  // Filter by month
+  const monthFilteredConsultants = filteredConsultants.filter(c => {
+    if (selectedMonth === 'All') return true;
+    const cardDate = new Date(c.updatedAt || Date.now());
+    return cardDate.getMonth() === parseInt(selectedMonth, 10);
+  });
+
   // Classify consultants into pipeline columns
-  const craConsultants = filteredConsultants.filter(c => 
+  const craConsultants = monthFilteredConsultants.filter(c => 
     c.status === 'Active' &&
     !c.archived && 
     c.cras && 
@@ -232,7 +241,7 @@ export default function ValidationsPipeline({
   );
 
   // Moves to Billing if all CRAs are validated AND at least one ACTIVE client invoice is NOT sent yet
-  const billingConsultants = filteredConsultants.filter(c => {
+  const billingConsultants = monthFilteredConsultants.filter(c => {
     if (c.status !== 'Active') return false;
     if (c.archived) return false;
     const allCrasValidated = !c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated);
@@ -243,9 +252,10 @@ export default function ValidationsPipeline({
   });
 
   // Moves to Validation if all CRAs are validated AND all ACTIVE client invoices are sent
-  const validationConsultants = filteredConsultants.filter(c => {
+  const validationConsultants = monthFilteredConsultants.filter(c => {
     if (c.status !== 'Active') return false;
-    if (c.archived) return false;
+    if (c.archived && !showArchives) return false;
+    if (c.archived) return true;
     const allCrasValidated = !c.cras || c.cras.length === 0 || c.cras.every(cra => cra.validated);
     if (!allCrasValidated) return false;
     
@@ -260,10 +270,43 @@ export default function ValidationsPipeline({
           <h1 className="page-title">Timesheet And Invoice Validations</h1>
           <p className="text-muted text-sm mt-2">Review and manage consultant timesheets across billing stages.</p>
         </div>
-        <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="6" x2="6" y1="12" y2="12"/><line x1="2" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="6" x2="6" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
-          Filter
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="form-input"
+            style={{ 
+              width: '160px', 
+              padding: '6px 12px', 
+              fontSize: '0.875rem', 
+              borderRadius: '6px', 
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--card-bg)',
+              color: 'var(--text-main)',
+              cursor: 'pointer',
+              height: '38px'
+            }}
+          >
+            <option value="All">Tous les mois</option>
+            <option value="0">Janvier</option>
+            <option value="1">Février</option>
+            <option value="2">Mars</option>
+            <option value="3">Avril</option>
+            <option value="4">Mai</option>
+            <option value="5">Juin</option>
+            <option value="6">Juillet</option>
+            <option value="7">Août</option>
+            <option value="8">Septembre</option>
+            <option value="9">Octobre</option>
+            <option value="10">Novembre</option>
+            <option value="11">Décembre</option>
+          </select>
+
+          <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '38px' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="6" x2="6" y1="12" y2="12"/><line x1="2" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="6" x2="6" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+            Filter
+          </button>
+        </div>
       </div>
 
       <div className="kanban-board">
@@ -329,6 +372,16 @@ export default function ValidationsPipeline({
                           disabled={!c.history || c.history.length === 0}
                         >
                           ↩ Undo Last Action
+                        </button>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            updateConsultant(c.id, { muted: !c.muted }); 
+                            setActiveCardMenu(null); 
+                          }}
+                        >
+                          {c.muted ? '🔔 Reactivate Reminders' : '🔕 Mute CRA Reminders'}
                         </button>
                       </div>
                     </>
@@ -471,8 +524,25 @@ export default function ValidationsPipeline({
           <div className="kanban-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#10B981' }}>●</span> Validation
+              <button
+                className="btn-icon"
+                style={{
+                  padding: '2px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: showArchives ? 'var(--primary-color)' : 'var(--text-light)',
+                  marginLeft: '4px'
+                }}
+                onClick={() => setShowArchives(!showArchives)}
+                title={showArchives ? "Hide validated cards (Archives)" : "Show validated cards (Archives)"}
+              >
+                {showArchives ? <Eye size={16} /> : <EyeOff size={16} />}
+              </button>
             </div>
-            {validationConsultants.length > 0 && (
+            {validationConsultants.filter(c => !c.archived).length > 0 && (
               <button 
                 className="btn btn-outline" 
                 style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -486,7 +556,7 @@ export default function ValidationsPipeline({
             )}
           </div>
 
-          {isBulkMode && validationConsultants.length > 0 && (
+          {isBulkMode && validationConsultants.filter(c => !c.archived).length > 0 && (
             <div className="bulk-control-bar" style={{
               display: 'flex',
               flexDirection: 'column',
@@ -501,10 +571,10 @@ export default function ValidationsPipeline({
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 500 }}>
                   <input 
                     type="checkbox"
-                    checked={bulkSelectedIds.length === validationConsultants.length}
+                    checked={bulkSelectedIds.length === validationConsultants.filter(c => !c.archived).length}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setBulkSelectedIds(validationConsultants.map(c => c.id));
+                        setBulkSelectedIds(validationConsultants.filter(c => !c.archived).map(c => c.id));
                       } else {
                         setBulkSelectedIds([]);
                       }
@@ -514,7 +584,7 @@ export default function ValidationsPipeline({
                   Select All
                 </label>
                 <span className="font-semibold" style={{ color: 'var(--text-muted)' }}>
-                  {bulkSelectedIds.length} / {validationConsultants.length} selected
+                  {bulkSelectedIds.length} / {validationConsultants.filter(c => !c.archived).length} selected
                 </span>
               </div>
               <button
@@ -545,6 +615,7 @@ export default function ValidationsPipeline({
                 key={`val-${c.id}`} 
                 className={`kanban-card validation-ready ${isBulkMode && bulkSelectedIds.includes(c.id) ? 'bulk-selected' : ''}`}
                 onClick={() => {
+                  if (c.archived) return;
                   if (isBulkMode) {
                     setBulkSelectedIds(prev => 
                       prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
@@ -553,17 +624,22 @@ export default function ValidationsPipeline({
                     handleCardClick(c);
                   }
                 }}
-                title={isBulkMode ? "Click to toggle selection" : "Click to validate definitively"}
+                title={c.archived ? "Archived consultant" : (isBulkMode ? "Click to toggle selection" : "Click to validate definitively")}
                 style={{ 
                   position: 'relative',
-                  border: isBulkMode && bulkSelectedIds.includes(c.id) ? '2px solid var(--success-color)' : '1px solid var(--border-color)',
-                  backgroundColor: isBulkMode && bulkSelectedIds.includes(c.id) ? 'rgba(16, 185, 129, 0.03)' : '',
-                  cursor: 'pointer'
+                  border: c.archived 
+                    ? '1px dashed #94a3b8' 
+                    : (isBulkMode && bulkSelectedIds.includes(c.id) ? '2px solid var(--success-color)' : '1px solid var(--border-color)'),
+                  backgroundColor: c.archived
+                    ? '#f8fafc'
+                    : (isBulkMode && bulkSelectedIds.includes(c.id) ? 'rgba(16, 185, 129, 0.03)' : ''),
+                  cursor: c.archived ? 'default' : 'pointer',
+                  opacity: c.archived ? 0.75 : 1
                 }}
               >
                 <div className="flex justify-between items-center mb-3" style={{ position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                    {isBulkMode && (
+                    {isBulkMode && !c.archived && (
                       <input 
                         type="checkbox"
                         checked={bulkSelectedIds.includes(c.id)}
@@ -611,7 +687,11 @@ export default function ValidationsPipeline({
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)' }}>Ready</span>
+                    {c.archived ? (
+                      <span className="badge" style={{ backgroundColor: 'rgba(148, 163, 184, 0.1)', color: '#64748B' }}>Archived</span>
+                    ) : (
+                      <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)' }}>Ready</span>
+                    )}
                     {!isBulkMode && (
                       <MoreHorizontal 
                         className="text-light cursor-pointer hover:text-primary" 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreHorizontal, PlusCircle, Trash2, X, Save, Eye, BellOff } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, X, Save, BellOff } from 'lucide-react';
 
 const getInitials = (firstname, lastname) => {
   const f = firstname ? firstname.charAt(0).toUpperCase() : "";
@@ -18,8 +18,6 @@ export default function ConsultantConfiguration({
   const [editingConsultant, setEditingConsultant] = useState(null); // Employee detail side-panel
   const [creatingConsultant, setCreatingConsultant] = useState(false); // Creating employee status
   const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of consultant card menu open
-  const [viewingInvoiceHistoryConsultant, setViewingInvoiceHistoryConsultant] = useState(null); // Consultant profile for invoice history panel
-  const [previewingFile, setPreviewingFile] = useState(null); // File name of the invoice currently being previewed
   const [newBillingEmail, setNewBillingEmail] = useState('');
   const [showArchived, setShowArchived] = useState(false);
 
@@ -377,9 +375,6 @@ export default function ConsultantConfiguration({
                         <button className="dropdown-item" onClick={() => { setEditingConsultant(consultant); setCreatingConsultant(false); setActiveCardMenu(null); }}>
                           👤 Employee Details
                         </button>
-                        <button className="dropdown-item" onClick={() => { setViewingInvoiceHistoryConsultant(consultant); setActiveCardMenu(null); }}>
-                          📄 Invoice History
-                        </button>
                         <button 
                           className="dropdown-item" 
                           onClick={() => { handleUndo(consultant.id); setActiveCardMenu(null); }} 
@@ -561,18 +556,6 @@ export default function ConsultantConfiguration({
                 </label>
               </div>
 
-              <div className="form-group mb-0" style={{ marginTop: '0.5rem' }}>
-                <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={!!editingConsultant.muted} 
-                    onChange={e => setEditingConsultant({...editingConsultant, muted: e.target.checked})}
-                    style={{ width: '18px', height: '18px', accentColor: 'var(--accent-color)', cursor: 'pointer' }}
-                  />
-                  <span>Mettre en silence les rappels de CRA (Mute)</span>
-                </label>
-              </div>
- 
               <div className="form-group mb-0">
                 <label className="form-label">Comments</label>
                 <textarea className="form-input" rows="3" value={editingConsultant.comments || ''} onChange={e => setEditingConsultant({...editingConsultant, comments: e.target.value})}></textarea>
@@ -588,266 +571,6 @@ export default function ConsultantConfiguration({
         </>
       )}
 
-      {/* Invoice History Side Panel */}
-      {viewingInvoiceHistoryConsultant && (
-        <>
-          <div className="side-panel-overlay" onClick={() => setViewingInvoiceHistoryConsultant(null)}></div>
-          <div className="side-panel" style={{ width: '480px' }}>
-            <div className="panel-header">
-              <h3 className="m-0 font-bold text-lg text-primary">
-                Invoice History - {viewingInvoiceHistoryConsultant.firstname} {viewingInvoiceHistoryConsultant.name}
-              </h3>
-              <button className="btn-text text-light text-xl" onClick={() => setViewingInvoiceHistoryConsultant(null)}>&times;</button>
-            </div>
-            
-            <div className="panel-body flex flex-col gap-4">
-              {viewingInvoiceHistoryConsultant.clients && viewingInvoiceHistoryConsultant.clients.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {viewingInvoiceHistoryConsultant.clients.map(cli => (
-                    <div key={cli.id} className="card p-4 bg-slate-50" style={{ border: '1px solid var(--border-color)', boxShadow: 'none' }}>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="font-bold text-primary text-md">{cli.name}</span>
-                        <span className={`badge ${cli.sent ? 'badge-po-uploaded' : 'badge-po-pending'}`}>
-                          {cli.sent ? 'Sent / Validated' : 'Pending'}
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted flex flex-col gap-1">
-                        <div><strong>PO Number:</strong> {cli.poNumber || "Not configured"}</div>
-                        <div><strong>Billing Cycle:</strong> {cli.billingCycle || "Monthly"}</div>
-                        <div><strong>Nom du responsable:</strong> {cli.managerName || "N/A"}</div>
-                        <div><strong>Responsable de la facturation (E-mail):</strong> {cli.billingManagers && cli.billingManagers.length > 0 ? cli.billingManagers.join(', ') : (cli.managerEmail || "N/A")}</div>
-                        <div><strong>Phone Number:</strong> {cli.phone || "N/A"}</div>
-                        <div><strong>Order End Date:</strong> {cli.orderEndDate || "N/A"}</div>
-                        
-                        {/* Fictive invoice attachment */}
-                        <div className="mt-2 flex items-center justify-between p-2 bg-slate-100 rounded-md border border-slate-200">
-                          <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
-                            <span style={{ fontSize: '1rem' }}>📎</span>
-                            <span className="font-semibold text-slate-700 text-ellipsis overflow-hidden whitespace-nowrap">Facture_{cli.name.replace(/\s+/g, '')}_2026.pdf</span>
-                          </div>
-                          <div className="flex gap-1">
-                            <button 
-                              className="btn btn-outline p-1" 
-                              style={{ padding: '4px', minWidth: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}
-                              title="Ouvrir la pièce jointe de la facture"
-                              onClick={() => setPreviewingFile(`Facture_${cli.name.replace(/\s+/g, '')}_2026.pdf`)}
-                            >
-                              <Eye size={12} />
-                            </button>
-                            <button 
-                              className="btn btn-outline p-1" 
-                              style={{ padding: '4px', minWidth: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}
-                              title="Download Invoice"
-                              onClick={() => {
-                                const fileName = `Facture_${cli.name.replace(/\s+/g, '')}_2026.pdf`;
-                                const blob = new Blob(["Mock Invoice File Content for " + fileName], { type: "text/plain" });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                                URL.revokeObjectURL(url);
-                              }}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        {cli.poUploaded ? (
-                          <div className="mt-2 p-3 bg-white border border-slate-200 rounded-md flex items-center justify-between">
-                            <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
-                              <span style={{ fontSize: '1.25rem' }}>📄</span>
-                              <span className="font-medium text-slate-700 text-ellipsis overflow-hidden whitespace-nowrap">{cli.poFileName || "purchase_order.pdf"}</span>
-                            </div>
-                            <div className="flex gap-1">
-                              <button 
-                                className="btn btn-outline p-1" 
-                                style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                title="Open Document Preview"
-                                onClick={() => setPreviewingFile(cli.poFileName || "purchase_order.pdf")}
-                              >
-                                <Eye size={14} />
-                              </button>
-                              <button 
-                                className="btn btn-outline p-1" 
-                                style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                title="Download Document"
-                                onClick={() => {
-                                  const fileName = cli.poFileName || "purchase_order.pdf";
-                                  const fileUrl = cli.poFileUrl;
-                                  if (fileUrl) {
-                                    const a = document.createElement('a');
-                                    a.href = fileUrl;
-                                    a.download = fileName;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    document.body.removeChild(a);
-                                  } else {
-                                    const blob = new Blob(["Mock PO File Content for " + fileName], { type: "text/plain" });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = fileName;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    document.body.removeChild(a);
-                                    URL.revokeObjectURL(url);
-                                  }
-                                }}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="mt-2 text-red-500 font-medium">⚠️ Purchase Order Pending Upload</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-muted p-8 border border-dashed border-slate-300 rounded-lg">
-                  No billing/invoice history found.
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Mock Document Preview Modal */}
-      {previewingFile && (
-        <div className="modal-overlay" onClick={() => setPreviewingFile(null)}>
-          <div className="modal-container" style={{ maxWidth: '600px', backgroundColor: '#F8FAFC' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header" style={{ backgroundColor: '#ffffff' }}>
-              <h3 className="modal-title flex items-center gap-2">
-                <span>📄</span> Document Preview: {previewingFile}
-              </h3>
-              <button className="btn-text text-light text-xl" onClick={() => setPreviewingFile(null)}>&times;</button>
-            </div>
-            
-            <div className="modal-body" style={{ padding: '2rem' }}>
-              {/* Document Sheet layout */}
-              <div style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #E2E8F0',
-                borderRadius: '8px',
-                padding: '2.5rem',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-                fontFamily: 'Courier New, Courier, monospace',
-                position: 'relative'
-              }}>
-                {/* Draft watermark */}
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%) rotate(-30deg)',
-                  fontSize: '3rem',
-                  fontWeight: 900,
-                  color: 'rgba(239, 68, 68, 0.08)',
-                  pointerEvents: 'none',
-                  whiteSpace: 'nowrap'
-                }}>
-                  ACEO DOCUMENT PREVIEW
-                </div>
-
-                <div className="flex justify-between items-center mb-6" style={{ borderBottom: '2px solid #262E52', paddingBottom: '1rem' }}>
-                  <div>
-                    <h2 style={{ color: '#262E52', margin: 0, fontWeight: 700, fontFamily: 'sans-serif' }}>ACEO</h2>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontFamily: 'sans-serif' }}>Timesheet & Billing Portal</p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: 0, fontWeight: 'bold' }}>{previewingFile.toLowerCase().includes('facture') ? 'INVOICE / FACTURE' : 'PURCHASE ORDER'}</p>
-                    <p style={{ margin: 0, fontSize: '0.75rem' }}>No: {viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile)?.poNumber || "VE-2024-MAINT"}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between mb-6" style={{ fontSize: '0.8rem' }}>
-                  <div>
-                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>From:</p>
-                    <p style={{ margin: 0 }}>ACEO SAS</p>
-                    <p style={{ margin: 0 }}>12 Rue de la Paix</p>
-                    <p style={{ margin: 0 }}>75002 Paris, France</p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>To:</p>
-                    <p style={{ margin: 0 }}>{viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile)?.name || "Veolia"}</p>
-                    <p style={{ margin: 0 }}>Manager: {viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile)?.managerName || "Jean-Pierre Lambert"}</p>
-                  </div>
-                </div>
-
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginTop: '1.5rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #CBD5E1', textAlign: 'left' }}>
-                      <th style={{ padding: '8px 0' }}>Description</th>
-                      <th style={{ padding: '8px 0', textAlign: 'center' }}>Qty</th>
-                      <th style={{ padding: '8px 0', textAlign: 'right' }}>Rate</th>
-                      <th style={{ padding: '8px 0', textAlign: 'right' }}>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
-                      <td style={{ padding: '8px 0' }}>Prestation Conseil - {viewingInvoiceHistoryConsultant?.role}</td>
-                      <td style={{ padding: '8px 0', textAlign: 'center' }}>20 days</td>
-                      <td style={{ padding: '8px 0', textAlign: 'right' }}>650.00 €</td>
-                      <td style={{ padding: '8px 0', textAlign: 'right' }}>13,000.00 €</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '8px 0' }}>Frais de déplacement client</td>
-                      <td style={{ padding: '8px 0', textAlign: 'center' }}>1</td>
-                      <td style={{ padding: '8px 0', textAlign: 'right' }}>240.00 €</td>
-                      <td style={{ padding: '8px 0', textAlign: 'right' }}>240.00 €</td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <div style={{ borderTop: '2px solid #E2E8F0', marginTop: '1.5rem', paddingTop: '1rem', textAlign: 'right', fontSize: '0.85rem' }}>
-                  <p style={{ margin: '0 0 4px 0' }}>Subtotal: 13,240.00 €</p>
-                  <p style={{ margin: '0 0 4px 0' }}>VAT (20%): 2,648.00 €</p>
-                  <h3 style={{ margin: 0, color: '#262E52', fontWeight: 'bold' }}>Total: 15,888.00 €</h3>
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-footer" style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button 
-                className="btn btn-outline"
-                onClick={() => {
-                  const client = viewingInvoiceHistoryConsultant?.clients?.find(c => c.poFileName === previewingFile || `Facture_${c.name.replace(/\s+/g, '')}_2026.pdf` === previewingFile);
-                  const fileUrl = client?.poFileUrl;
-                  const fileName = previewingFile;
-                  if (fileUrl) {
-                    const a = document.createElement('a');
-                    a.href = fileUrl;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                  } else {
-                    const blob = new Blob(["Mock Invoice/PO File Content for " + fileName], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                  }
-                }}
-              >
-                Download File
-              </button>
-              <button className="btn btn-primary" onClick={() => setPreviewingFile(null)}>Close Preview</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Reusable Custom Modal */}
       {modal.isOpen && (

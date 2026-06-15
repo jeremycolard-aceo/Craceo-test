@@ -4,13 +4,12 @@ import Topbar from './Topbar';
 import ConsultantConfiguration from './ConsultantConfiguration';
 import ValidationsPipeline from './ValidationsPipeline';
 import Notifications from './Notifications';
-import MySpace from './MySpace';
 import FilterSidebar from './FilterSidebar';
 import { mockConsultants } from './data';
 import './index.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('me');
+  const [currentView, setCurrentView] = useState('validations');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Filter sidebar state
@@ -313,14 +312,7 @@ function App() {
               updateConsultant={updateConsultant}
             />
           )}
-          {currentView === 'me' && (
-            <MySpace 
-              consultants={consultants}
-              updateConsultant={updateConsultant}
-              notifications={notifications}
-              addNotification={addNotification}
-            />
-          )}
+
 
         </div>
       </div>
