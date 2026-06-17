@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MoreHorizontal, PlusCircle, Trash2, X, Save, BellOff } from 'lucide-react';
+import { useState } from 'react';
+import { MoreHorizontal, PlusCircle, Trash2, Save, BellOff } from 'lucide-react';
 
 const getInitials = (firstname, lastname) => {
   const f = firstname ? firstname.charAt(0).toUpperCase() : "";
@@ -382,6 +382,18 @@ export default function ConsultantConfiguration({
                         >
                           ↩ Undo Last Action
                         </button>
+                        <button 
+                          className="dropdown-item" 
+                          style={{ color: 'var(--danger-color)' }}
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete and archive the consultant ${consultant.firstname} ${consultant.name}?`)) {
+                              updateConsultant(consultant.id, { status: "Left / Archived" });
+                            }
+                            setActiveCardMenu(null);
+                          }}
+                        >
+                          ❌ Delete / Archive
+                        </button>
                       </div>
                     </>
                   )}
@@ -562,10 +574,24 @@ export default function ConsultantConfiguration({
               </div>
             </div>
             
-            <div className="panel-footer flex-col">
+            <div className="panel-footer flex flex-col gap-2">
               <button className="btn btn-primary w-full p-4" onClick={saveConsultantDetails}>
                 <Save size={18} /> Save Changes
               </button>
+              {!creatingConsultant && (
+                <button 
+                  className="btn btn-outline w-full p-4" 
+                  style={{ color: 'var(--danger-color)', borderColor: 'var(--danger-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete and archive the consultant ${editingConsultant.firstname} ${editingConsultant.name}?`)) {
+                      updateConsultant(editingConsultant.id, { status: "Left / Archived" });
+                      setEditingConsultant(null);
+                    }
+                  }}
+                >
+                  <Trash2 size={18} /> Delete / Archive Consultant
+                </button>
+              )}
             </div>
           </div>
         </>

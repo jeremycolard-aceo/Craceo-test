@@ -55,15 +55,7 @@ export default function ValidationsPipeline({
     return `${year}-${month}`;
   };
 
-  const [startDate, setStartDate] = useState(getCurrentMonthString());
-  const [endDate, setEndDate] = useState(getCurrentMonthString());
-
-  const handleStartChange = (val) => {
-    setStartDate(val);
-    if (endDate < val) {
-      setEndDate(val);
-    }
-  };
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthString());
 
   const [showArchives, setShowArchives] = useState(false);
 
@@ -240,17 +232,13 @@ export default function ValidationsPipeline({
     setValidationModal({ isOpen: false, consultant: null });
   };
 
-  // Filter by month range (start to end inclusive)
+  // Filter by selected month/year (input type="month")
   const monthFilteredConsultants = filteredConsultants.filter(c => {
     const cardDate = new Date(c.updatedAt || 0);
     
-    const [startYear, startMonth] = startDate.split('-').map(Number);
-    const [endYear, endMonth] = endDate.split('-').map(Number);
+    const [targetYear, targetMonth] = selectedMonth.split('-').map(Number);
     
-    const startD = new Date(startYear, startMonth - 1, 1, 0, 0, 0, 0);
-    const endD = new Date(endYear, endMonth, 0, 23, 59, 59, 999);
-    
-    return cardDate >= startD && cardDate <= endD;
+    return cardDate.getFullYear() === targetYear && (cardDate.getMonth() + 1) === targetMonth;
   });
 
   // Classify consultants into pipeline columns
@@ -294,14 +282,14 @@ export default function ValidationsPipeline({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Début:</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Date:</span>
             <input
               type="month"
-              value={startDate}
-              onChange={(e) => handleStartChange(e.target.value)}
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
               className="form-input"
               style={{
-                width: '145px',
+                width: '160px',
                 padding: '6px 12px',
                 fontSize: '0.875rem',
                 borderRadius: '6px',
@@ -311,28 +299,6 @@ export default function ValidationsPipeline({
                 cursor: 'pointer',
                 height: '38px'
               }}
-            />
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Fin:</span>
-            <input
-              type="month"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="form-input"
-              style={{
-                width: '145px',
-                padding: '6px 12px',
-                fontSize: '0.875rem',
-                borderRadius: '6px',
-                border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--card-bg)',
-                color: 'var(--text-main)',
-                cursor: 'pointer',
-                height: '38px'
-              }}
-              min={startDate}
             />
           </div>
 
