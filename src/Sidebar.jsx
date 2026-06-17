@@ -1,4 +1,4 @@
-import { Users, Bell, LogOut, CheckSquare, Calendar, Sliders, Info, MessageSquare, LayoutGrid } from 'lucide-react';
+import { Users, Bell, LogOut, CheckSquare, Calendar, Sliders } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
   return (
@@ -42,20 +42,6 @@ export default function Sidebar({ currentView, setCurrentView }) {
           <Sliders size={18} />
           <span>Notification Configuration</span>
         </div>
-
-        <div className="menu-section" style={{ marginTop: '1.5rem' }}>Support</div>
-        <div className="menu-item" onClick={() => alert('Portail CRACEO - Version 2.05')}>
-          <Info size={18} />
-          <span>About</span>
-        </div>
-        <div className="menu-item" onClick={() => alert('Thank you for your feedback!')}>
-          <MessageSquare size={18} />
-          <span>Feedback</span>
-        </div>
-        <div className="menu-item" onClick={() => alert('Opening App Gallery...')}>
-          <LayoutGrid size={18} />
-          <span>App Gallery</span>
-        </div>
       </div>
 
       <div className="sidebar-footer-menu">
@@ -70,4 +56,5 @@ export default function Sidebar({ currentView, setCurrentView }) {
     </div>
   );
 }
+
 
