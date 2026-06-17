@@ -1,5 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye, EyeOff, BellOff } from 'lucide-react';
+
+const MONTHS_FR = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+];
 
 // Relative time formatter helper
 const formatTimeAgo = (timestamp) => {
@@ -31,12 +36,10 @@ const isClientActiveInMonth = (consultant, client) => {
 
 export default function ValidationsPipeline({ 
   consultants, 
-  setConsultants, 
   updateConsultant,
   filteredConsultants, 
   onOpenFilter,
   handleUndo,
-  canUndo,
   addNotification
 }) {
   const [selectedClient, setSelectedClient] = useState(null); // Local copy of client being edited
@@ -56,6 +59,14 @@ export default function ValidationsPipeline({
   };
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthString());
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
+
+  const getSelectedMonthLabel = () => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    if (!year || !month || month < 1 || month > 12) return selectedMonth;
+    return `${MONTHS_FR[month - 1]} ${year}`;
+  };
 
   const [showArchives, setShowArchives] = useState(false);
 
@@ -96,7 +107,7 @@ export default function ValidationsPipeline({
   };
 
   // Force re-renders for live relative time updates
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => setTick(t => t + 1), 30000); // Rerender every 30s
     return () => clearInterval(interval);
@@ -150,6 +161,10 @@ export default function ValidationsPipeline({
   };
 
   const handleSaveChanges = () => {
+    if (!selectedClient.poNumber || !selectedClient.poNumber.trim()) {
+      alert("Le champ PURCHASE ORDER NUMBER (Numéro de commande) est obligatoire.");
+      return;
+    }
     if (selectedConsultant && selectedClient) {
       updateConsultant(selectedConsultant.id, (c) => ({
         clients: c.clients.map(cli => 
@@ -161,6 +176,10 @@ export default function ValidationsPipeline({
   };
 
   const handleMarkAsSend = () => {
+    if (!selectedClient.poNumber || !selectedClient.poNumber.trim()) {
+      alert("Le champ PURCHASE ORDER NUMBER (Numéro de commande) est obligatoire.");
+      return;
+    }
     if (selectedConsultant && selectedClient) {
       const updatedClient = {
         ...selectedClient,
@@ -184,13 +203,13 @@ export default function ValidationsPipeline({
   };
 
   // Toggle CRA validation status
-  const toggleCRAValidation = (consultantId, craId) => {
+  const handleToggleCRAValidation = (consultantId, craId) => {
     const consultant = consultants.find(con => con.id === consultantId);
     const cra = consultant?.cras?.find(c => c.id === craId);
     if (consultant && cra) {
       const willBeValidated = !cra.validated;
       const employeeName = `${consultant.firstname} ${consultant.name}`;
-      const monthStr = new Date(consultant.updatedAt || Date.now()).toLocaleString('en-US', { month: 'long' });
+      const monthStr = new Date(consultant.updatedAt || 0).toLocaleString('en-US', { month: 'long' });
       const message = willBeValidated 
         ? `The CRA **${cra.name}** for **${monthStr}** has been validated by **Marie Dubois** for **${employeeName}**.`
         : `The CRA **${cra.name}** for **${monthStr}** has been unvalidated for correction by **Marie Dubois** for **${employeeName}**.`;
@@ -283,23 +302,107 @@ export default function ValidationsPipeline({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Date:</span>
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="form-input"
-              style={{
-                width: '160px',
-                padding: '6px 12px',
-                fontSize: '0.875rem',
-                borderRadius: '6px',
-                border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--card-bg)',
-                color: 'var(--text-main)',
-                cursor: 'pointer',
-                height: '38px'
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const [year] = selectedMonth.split('-').map(Number);
+                  setPickerYear(year || new Date().getFullYear());
+                  setIsDatePickerOpen(!isDatePickerOpen);
+                }}
+                className="form-input"
+                style={{
+                  width: '160px',
+                  padding: '6px 12px',
+                  fontSize: '0.875rem',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--surface-color)',
+                  color: 'var(--text-main)',
+                  cursor: 'pointer',
+                  height: '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <span>{getSelectedMonthLabel()}</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>▼</span>
+              </button>
+              
+              {isDatePickerOpen && (
+                <>
+                  <div 
+                    style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
+                    onClick={() => setIsDatePickerOpen(false)}
+                  />
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      top: '42px',
+                      right: 0,
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                      padding: '1rem',
+                      zIndex: 100,
+                      width: '280px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', fontWeight: 'bold' }}>
+                      <button 
+                        type="button"
+                        className="btn btn-outline" 
+                        style={{ padding: '2px 8px', height: '28px', minWidth: '28px', border: '1px solid var(--border-color)' }} 
+                        onClick={() => setPickerYear(y => y - 1)}
+                      >
+                        &lt;
+                      </button>
+                      <span style={{ color: 'var(--primary-color)' }}>{pickerYear}</span>
+                      <button 
+                        type="button"
+                        className="btn btn-outline" 
+                        style={{ padding: '2px 8px', height: '28px', minWidth: '28px', border: '1px solid var(--border-color)' }} 
+                        onClick={() => setPickerYear(y => y + 1)}
+                      >
+                        &gt;
+                      </button>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                      {MONTHS_FR.map((m, idx) => {
+                        const monthVal = String(idx + 1).padStart(2, '0');
+                        const targetVal = `${pickerYear}-${monthVal}`;
+                        const isSelected = selectedMonth === targetVal;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            style={{
+                              padding: '6px 4px',
+                              fontSize: '0.75rem',
+                              backgroundColor: isSelected ? 'var(--primary-color)' : 'transparent',
+                              color: isSelected ? '#FFFFFF' : 'var(--text-main)',
+                              border: isSelected ? 'none' : '1px solid var(--border-color)',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontWeight: isSelected ? 'bold' : 'normal'
+                            }}
+                            onClick={() => {
+                              setSelectedMonth(targetVal);
+                              setIsDatePickerOpen(false);
+                            }}
+                          >
+                            {m.substring(0, 4)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '38px' }}>
@@ -392,7 +495,7 @@ export default function ValidationsPipeline({
                     <span 
                       key={cra.id} 
                       className={`badge cursor-pointer ${cra.validated ? 'badge-validated' : 'badge-unvalidated'}`}
-                      onClick={() => toggleCRAValidation(c.id, cra.id)}
+                      onClick={() => handleToggleCRAValidation(c.id, cra.id)}
                       title={cra.validated ? "Click to invalidate" : "Click to validate"}
                     >
                       {cra.validated ? '✓ ' : ''}{cra.name}
@@ -748,7 +851,7 @@ export default function ValidationsPipeline({
           <div className="side-panel-overlay" onClick={closePanel}></div>
           <div className="side-panel">
             <div className="panel-header">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-5">
                 <div className="avatar" style={{ backgroundColor: '#F4F5F7', color: 'var(--primary-color)', width: '48px', height: '48px' }}>
                   {selectedConsultant?.initials}
                 </div>
@@ -794,47 +897,76 @@ export default function ValidationsPipeline({
 
                   <div className="form-group">
                     <label className="form-label">CLIENT NAME</label>
-                    <input type="text" className="form-input" value={selectedClient.name} readOnly />
+                    <input type="text" className="form-input" value={selectedClient.name} readOnly style={{ backgroundColor: 'var(--bg-color)' }} />
                   </div>
                   
-                  <div className="form-group">
-                    <label className="form-label">MANAGER NAME</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={selectedClient.managerName || ''} 
-                      onChange={(e) => handleClientFieldChange('managerName', e.target.value)}
-                    />
-                  </div>
-
                   <div className="form-group">
                     <label className="form-label">BILLING CYCLE</label>
                     <input 
                       type="text" 
                       className="form-input" 
                       value={selectedClient.billingCycle || ''} 
-                      onChange={(e) => handleClientFieldChange('billingCycle', e.target.value)}
+                      readOnly
+                      style={{ backgroundColor: 'var(--bg-color)' }}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">MANAGER EMAIL</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={selectedClient.managerEmail || ''} 
-                      onChange={(e) => handleClientFieldChange('managerEmail', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">PHONE NUMBER</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={selectedClient.phone || ''} 
-                      onChange={(e) => handleClientFieldChange('phone', e.target.value)}
-                    />
+                    <label className="form-label">BILLING CONTACTS</label>
+                    <div className="flex flex-wrap gap-2" style={{ marginTop: '0.25rem' }}>
+                      {(selectedClient.billingContacts || (selectedClient.managerName ? [{
+                        name: selectedClient.managerName,
+                        email: selectedClient.managerEmail || selectedClient.billingManagers?.[0] || "",
+                        phone: selectedClient.phone || ""
+                      }] : [])).map((contact, idx) => (
+                        <div 
+                          key={idx} 
+                          className="tooltip-container"
+                          style={{
+                            position: 'relative',
+                            display: 'inline-block',
+                            cursor: 'pointer',
+                            padding: '6px 12px',
+                            backgroundColor: '#F1F5F9',
+                            border: '1px solid #E2E8F0',
+                            borderRadius: '6px',
+                            fontSize: '0.85rem',
+                            fontWeight: 500,
+                            color: 'var(--text-main)'
+                          }}
+                        >
+                          <span>{contact.name || 'Unnamed Contact'}</span>
+                          <div 
+                            className="tooltip-text" 
+                            style={{
+                              visibility: 'hidden',
+                              position: 'absolute',
+                              bottom: '125%',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              backgroundColor: '#1E293B',
+                              color: '#FFFFFF',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              whiteSpace: 'nowrap',
+                              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                              zIndex: 10,
+                              opacity: 0,
+                              transition: 'opacity 0.2s',
+                              fontSize: '0.75rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '4px',
+                              pointerEvents: 'none'
+                            }}
+                          >
+                            {contact.email && <div>✉ {contact.email}</div>}
+                            {contact.phone && <div>📞 {contact.phone}</div>}
+                            {!contact.email && !contact.phone && <div>No contact details</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -853,7 +985,8 @@ export default function ValidationsPipeline({
                       type="date" 
                       className="form-input" 
                       value={selectedClient.orderEndDate || ''} 
-                      onChange={(e) => handleClientFieldChange('orderEndDate', e.target.value)}
+                      readOnly
+                      style={{ backgroundColor: 'var(--bg-color)' }}
                     />
                   </div>
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, RefreshCcw } from 'lucide-react';
 
 export default function Topbar({ searchQuery, setSearchQuery, onReset }) {

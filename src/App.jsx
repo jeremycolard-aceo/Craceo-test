@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import ConsultantConfiguration from './ConsultantConfiguration';
@@ -9,6 +9,8 @@ import DelayHistory from './DelayHistory';
 import NotificationConfig from './NotificationConfig';
 import { mockConsultants } from './data';
 import './index.css';
+
+const INITIAL_TIME_BASELINE = 1718625600000; // Fixed baseline timestamp to make state initialization pure
 
 function App() {
   const [currentView, setCurrentView] = useState('validations');
@@ -65,7 +67,7 @@ function App() {
       message: 'The CRAs of **Nicolas Sanchez** and **Guillaume Duluc** have not been validated.',
       author: 'System',
       employeeName: 'Multiple',
-      time: Date.now() - 10000,
+      time: INITIAL_TIME_BASELINE - 10000,
       read: false
     },
     {
@@ -75,7 +77,7 @@ function App() {
       message: 'The invoices for **Guillaume Duluc** and **Quentin Astarie** have not been sent.',
       author: 'System',
       employeeName: 'Multiple',
-      time: Date.now() - 12000,
+      time: INITIAL_TIME_BASELINE - 12000,
       read: false
     },
     {
@@ -85,7 +87,7 @@ function App() {
       message: 'The final validation for **Nicolas Sanchez** has not been completed.',
       author: 'System',
       employeeName: 'Multiple',
-      time: Date.now() - 14000,
+      time: INITIAL_TIME_BASELINE - 14000,
       read: false
     },
     {
@@ -95,7 +97,7 @@ function App() {
       message: 'The last action concerning **Nicolas Sanchez** has been canceled by **Marie Dubois**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
-      time: Date.now() - 30000, // Just now
+      time: INITIAL_TIME_BASELINE - 30000, // Just now
       read: true
     },
     {
@@ -105,7 +107,7 @@ function App() {
       message: 'Invoice for **Air Liquide** has been marked as sent by **Marie Dubois** for **Nicolas Sanchez**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
-      time: Date.now() - 300000, // 5m ago
+      time: INITIAL_TIME_BASELINE - 300000, // 5m ago
       read: false
     },
     {
@@ -115,7 +117,7 @@ function App() {
       message: 'The complete workflow for **Nicolas Sanchez** has been validated by **Marie Dubois**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
-      time: Date.now() - 400000, // 7m ago
+      time: INITIAL_TIME_BASELINE - 400000, // 7m ago
       read: false
     },
     {
@@ -125,7 +127,7 @@ function App() {
       message: 'The complete workflow for **3** consultants has been validated by **Marie Dubois**.',
       author: 'Marie Dubois',
       employeeName: 'Multiple',
-      time: Date.now() - 600000, // 10m ago
+      time: INITIAL_TIME_BASELINE - 600000, // 10m ago
       read: false,
       consultantsList: ['Nicolas Sanchez', 'Guillaume Duluc', 'Quentin Astarie']
     },
@@ -136,7 +138,7 @@ function App() {
       message: 'The CRA **BOOND** for **October** has been validated by **Marie Dubois** for the consultant **Nicolas Sanchez**.',
       author: 'Marie Dubois',
       employeeName: 'Nicolas Sanchez',
-      time: Date.now() - 7200000, // 2h ago
+      time: INITIAL_TIME_BASELINE - 7200000, // 2h ago
       read: false
     },
     {
@@ -146,7 +148,7 @@ function App() {
       message: 'Mission for **Air Liquide** is ending in 30 days for **Nicolas Sanchez**.',
       author: 'System',
       employeeName: 'Nicolas Sanchez',
-      time: Date.now() - 18000000, // 5h ago
+      time: INITIAL_TIME_BASELINE - 18000000, // 5h ago
       read: false
     }
   ]);
@@ -201,7 +203,8 @@ function App() {
         const updatedFields = typeof updatedFieldsOrFn === 'function' ? updatedFieldsOrFn(c) : updatedFieldsOrFn;
         
         // Push current state to this consultant's local history (stripping previous history references)
-        const { history: _, ...snapshot } = c;
+        const snapshot = { ...c };
+        delete snapshot.history;
         const newHistory = c.history ? [...c.history, snapshot] : [snapshot];
         
         // Show undo toast if we are archiving a card

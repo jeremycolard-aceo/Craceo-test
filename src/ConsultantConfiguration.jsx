@@ -239,22 +239,46 @@ export default function ConsultantConfiguration({
   };
 
   const handleDeleteActiveAssignment = () => {
-    if (window.confirm("Are you sure you want to delete this assignment?")) {
-      const updatedAssignments = billingPanel.assignments.filter(ass => ass.id !== billingPanel.activeAssignmentId);
-      const updatedClients = billingPanel.clients.filter(cli => cli.id !== billingPanel.activeAssignmentId);
-      
-      let nextActiveId = null;
-      if (updatedAssignments.length > 0) {
-        nextActiveId = updatedAssignments[0].id;
-      }
-      
-      setBillingPanel(prev => ({
-        ...prev,
-        assignments: updatedAssignments,
-        clients: updatedClients,
-        activeAssignmentId: nextActiveId
-      }));
+    openDeleteAssignmentInPanelModal(billingPanel.activeAssignmentId, activeAss.client);
+  };
+
+  const openDeleteAssignmentInPanelModal = (assId, clientName) => {
+    setModal({
+      isOpen: true,
+      type: 'deleteAssignmentInPanel',
+      targetId: assId,
+      title: 'Delete Assignment',
+      client: clientName,
+      craName: '',
+      startDate: '',
+      endDate: '',
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      billingManagers: [],
+      phone: '',
+      poNumber: '',
+      orderEndDate: '',
+      muted: false
+    });
+  };
+
+  const handleDeleteAssignmentInPanelConfirm = () => {
+    const updatedAssignments = billingPanel.assignments.filter(ass => ass.id !== modal.targetId);
+    const updatedClients = billingPanel.clients.filter(cli => cli.id !== modal.targetId);
+    
+    let nextActiveId = null;
+    if (updatedAssignments.length > 0) {
+      nextActiveId = updatedAssignments[0].id;
     }
+    
+    setBillingPanel(prev => ({
+      ...prev,
+      assignments: updatedAssignments,
+      clients: updatedClients,
+      activeAssignmentId: nextActiveId
+    }));
+    closeModal();
   };
 
   const updateActiveClientField = (field, value) => {
@@ -467,7 +491,7 @@ export default function ConsultantConfiguration({
           return (
             <div key={consultant.id} className="card" style={{ width: '380px', opacity: consultant.status !== 'Active' ? 0.75 : 1 }}>
               <div className="card-header">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-5">
                   <div className="avatar avatar-lg">{consultant.initials}</div>
                   <div>
                     <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
@@ -762,6 +786,11 @@ export default function ConsultantConfiguration({
                   Are you sure you want to delete this active assignment? This will also remove the linked billing configuration.
                 </p>
               )}
+              {modal.type === 'deleteAssignmentInPanel' && (
+                <p className="m-0 text-sm text-muted">
+                  Are you sure you want to delete the assignment for <strong>{modal.client}</strong>? This will remove it from the list of missions.
+                </p>
+              )}
               {modal.type === 'deleteConsultant' && (
                 <p className="m-0 text-sm text-muted">
                   Are you sure you want to delete and archive the consultant <strong>{modal.consultantName}</strong>?
@@ -773,6 +802,9 @@ export default function ConsultantConfiguration({
               <button className="btn btn-outline" onClick={closeModal}>Cancel</button>
               {modal.type === 'deleteAssignment' && (
                 <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteAssignmentConfirm}>Delete</button>
+              )}
+              {modal.type === 'deleteAssignmentInPanel' && (
+                <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteAssignmentInPanelConfirm}>Delete</button>
               )}
               {modal.type === 'deleteConsultant' && (
                 <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteConsultantConfirm}>Confirm Archive</button>
@@ -788,7 +820,7 @@ export default function ConsultantConfiguration({
           <div className="side-panel-overlay" onClick={handleCloseBillingPanel}></div>
           <div className="side-panel" style={{ width: '600px' }}>
             <div className="panel-header">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-5">
                 <div className="avatar">
                   {panelConsultant ? getInitials(panelConsultant.firstname, panelConsultant.name) : 'NW'}
                 </div>
@@ -804,7 +836,7 @@ export default function ConsultantConfiguration({
               <button className="btn-text text-light text-xl" onClick={handleCloseBillingPanel}>&times;</button>
             </div>
             
-            <div className="panel-body flex flex-col gap-4">
+            <div className="panel-body flex flex-col gap-4" style={{ overflowY: 'auto', flex: 1, maxHeight: 'calc(100vh - 160px)' }}>
               <h4 className="font-bold mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary-color)' }}>
                 <span style={{ width: '4px', height: '16px', backgroundColor: 'var(--accent-color)', display: 'inline-block' }}></span>
                 Billing & Contact Information
