@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye, EyeOff, BellOff } from 'lucide-react';
+import { MoreHorizontal, Paperclip, Save, FileText, Send, Eye, EyeOff, BellOff, Phone, Mail } from 'lucide-react';
 
 const MONTHS_FR = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -912,60 +912,93 @@ export default function ValidationsPipeline({
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">BILLING CONTACTS</label>
-                    <div className="flex flex-wrap gap-2" style={{ marginTop: '0.25rem' }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>BILLING CONTACTS</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '0.5rem' }}>
                       {(selectedClient.billingContacts || (selectedClient.managerName ? [{
                         name: selectedClient.managerName,
                         email: selectedClient.managerEmail || selectedClient.billingManagers?.[0] || "",
                         phone: selectedClient.phone || ""
                       }] : [])).map((contact, idx) => (
                         <div 
-                          key={idx} 
-                          className="tooltip-container"
+                          key={idx}
                           style={{
-                            position: 'relative',
-                            display: 'inline-block',
-                            cursor: 'pointer',
-                            padding: '6px 12px',
-                            backgroundColor: '#F1F5F9',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '12px 16px',
+                            backgroundColor: '#F8FAFC',
                             border: '1px solid #E2E8F0',
-                            borderRadius: '6px',
-                            fontSize: '0.85rem',
-                            fontWeight: 500,
-                            color: 'var(--text-main)'
+                            borderRadius: '8px',
                           }}
                         >
-                          <span>{contact.name || 'Unnamed Contact'}</span>
-                          <div 
-                            className="tooltip-text" 
-                            style={{
-                              visibility: 'hidden',
-                              position: 'absolute',
-                              bottom: '125%',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              backgroundColor: '#1E293B',
-                              color: '#FFFFFF',
-                              padding: '8px 12px',
-                              borderRadius: '6px',
-                              whiteSpace: 'nowrap',
-                              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                              zIndex: 10,
-                              opacity: 0,
-                              transition: 'opacity 0.2s',
-                              fontSize: '0.75rem',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '4px',
-                              pointerEvents: 'none'
-                            }}
-                          >
-                            {contact.email && <div>✉ {contact.email}</div>}
-                            {contact.phone && <div>📞 {contact.phone}</div>}
-                            {!contact.email && !contact.phone && <div>No contact details</div>}
+                          <span style={{ fontWeight: 500, fontSize: '0.9rem', color: '#1E293B' }}>
+                            {contact.name || 'Unnamed Contact'}
+                          </span>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {contact.phone && (
+                              <div className="tooltip-container" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                                <Phone size={14} style={{ color: '#475569' }} />
+                                <div 
+                                  className="tooltip-text" 
+                                  style={{
+                                    visibility: 'hidden',
+                                    position: 'absolute',
+                                    bottom: '125%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    backgroundColor: '#1E293B',
+                                    color: '#FFFFFF',
+                                    padding: '6px 10px',
+                                    borderRadius: '6px',
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                    zIndex: 10,
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                    fontSize: '0.75rem',
+                                    pointerEvents: 'none'
+                                  }}
+                                >
+                                  {contact.phone}
+                                </div>
+                              </div>
+                            )}
+
+                            {contact.email && (
+                              <div className="tooltip-container" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                                <Mail size={14} style={{ color: '#475569' }} />
+                                <div 
+                                  className="tooltip-text" 
+                                  style={{
+                                    visibility: 'hidden',
+                                    position: 'absolute',
+                                    bottom: '125%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    backgroundColor: '#1E293B',
+                                    color: '#FFFFFF',
+                                    padding: '6px 10px',
+                                    borderRadius: '6px',
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                    zIndex: 10,
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                    fontSize: '0.75rem',
+                                    pointerEvents: 'none'
+                                  }}
+                                >
+                                  {contact.email}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
+                      {(!selectedClient.billingContacts || selectedClient.billingContacts.length === 0) && !selectedClient.managerName && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', fontStyle: 'italic' }}>No contacts found</div>
+                      )}
                     </div>
                   </div>
 
@@ -985,8 +1018,7 @@ export default function ValidationsPipeline({
                       type="date" 
                       className="form-input" 
                       value={selectedClient.orderEndDate || ''} 
-                      readOnly
-                      style={{ backgroundColor: 'var(--bg-color)' }}
+                      onChange={(e) => handleClientFieldChange('orderEndDate', e.target.value)}
                     />
                   </div>
 

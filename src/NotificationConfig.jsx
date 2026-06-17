@@ -132,12 +132,11 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
   };
 
 
-  // Helper to format J relative days
+  // Helper to format J relative days (J+n and J0 only)
   const formatRelativeDayLabel = (val) => {
     const num = parseInt(val, 10);
-    if (isNaN(num)) return "J0";
-    if (num > 0) return `J+${num}`;
-    return `J${num}`;
+    if (isNaN(num) || num <= 0) return "J0";
+    return `J+${num}`;
   };
 
 
@@ -553,8 +552,12 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                       <input
                         type="number"
+                        min="0"
                         value={editingRule.relativeDay}
-                        onChange={(e) => handleFieldChange('relativeDay', parseInt(e.target.value, 10))}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          handleFieldChange('relativeDay', isNaN(val) ? 0 : Math.max(0, val));
+                        }}
                         className="form-input"
                         style={{ width: '100%', padding: '0.625rem 1rem', fontSize: '0.9rem', backgroundColor: '#FFFFFF' }}
                         placeholder="e.g. 5"

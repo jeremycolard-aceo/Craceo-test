@@ -16,12 +16,12 @@ function App() {
   const [currentView, setCurrentView] = useState('validations');
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingViewChange, setPendingViewChange] = useState(null);
 
   const handleViewChange = (newView) => {
     if (hasUnsavedChanges) {
-      const confirmLeave = window.confirm("You have unsaved changes in your rule configuration. Do you want to discard them and leave this page?");
-      if (!confirmLeave) return;
-      setHasUnsavedChanges(false);
+      setPendingViewChange(newView);
+      return;
     }
     setCurrentView(newView);
   };
@@ -361,6 +361,42 @@ function App() {
                 UNDO
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {pendingViewChange && (
+        <div className="modal-overlay" style={{ zIndex: 110 }}>
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Unsaved Changes</h3>
+              <button 
+                className="btn-text" 
+                onClick={() => setPendingViewChange(null)} 
+                style={{ fontSize: '1.5rem', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-light)' }}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="m-0 text-sm text-muted" style={{ lineHeight: 1.5 }}>
+                You have unsaved changes in your rule configuration. Do you want to discard them and leave this page?
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setPendingViewChange(null)}>Cancel</button>
+              <button 
+                className="btn btn-primary" 
+                style={{ backgroundColor: 'var(--danger-color)' }} 
+                onClick={() => {
+                  setHasUnsavedChanges(false);
+                  setCurrentView(pendingViewChange);
+                  setPendingViewChange(null);
+                }}
+              >
+                Discard & Leave
+              </button>
+            </div>
           </div>
         </div>
       )}
