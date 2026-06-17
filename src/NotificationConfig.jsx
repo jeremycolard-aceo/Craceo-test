@@ -1,12 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Clock, MessageSquare, Users, Mail, Plus, Check } from 'lucide-react';
 import { mockNotificationRules } from './data';
 
-export default function NotificationConfig() {
+export default function NotificationConfig({ setHasUnsavedChanges }) {
   const [rules, setRules] = useState(mockNotificationRules);
   const [selectedRuleId, setSelectedRuleId] = useState(mockNotificationRules[0]?.id || null);
   const [editingRule, setEditingRule] = useState(mockNotificationRules[0] ? { ...mockNotificationRules[0] } : null);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Helper to check for unsaved changes
+  const hasUnsavedChanges = useCallback(() => {
+    if (!editingRule) return false;
+    const original = rules.find(r => r.id === selectedRuleId);
+    if (!original) return false;
+
+    return (
+      editingRule.name !== original.name ||
+      editingRule.active !== original.active ||
+      editingRule.messageTemplate !== original.messageTemplate ||
+      JSON.stringify(editingRule.channels) !== JSON.stringify(original.channels) ||
+      editingRule.relativeDay !== original.relativeDay ||
+      editingRule.timeOfDay !== original.timeOfDay
+    );
+  }, [editingRule, selectedRuleId, rules]);
+
+  // Sync unsaved changes state to parent App.jsx
+  useEffect(() => {
+    const unsaved = hasUnsavedChanges();
+    if (setHasUnsavedChanges) {
+      setHasUnsavedChanges(unsaved);
+    }
+    return () => {
+      if (setHasUnsavedChanges) {
+        setHasUnsavedChanges(false);
+      }
+    };
+  }, [hasUnsavedChanges, setHasUnsavedChanges]);
 
   // Success toast timer
   useEffect(() => {
@@ -17,6 +46,11 @@ export default function NotificationConfig() {
   }, [toastMessage]);
 
   const handleSelectRule = (id) => {
+    if (id === selectedRuleId) return;
+    if (hasUnsavedChanges()) {
+      const confirmLeave = window.confirm("You have unsaved changes in the current rule. Do you want to discard them and switch to another rule?");
+      if (!confirmLeave) return;
+    }
     setSelectedRuleId(id);
     const rule = rules.find(r => r.id === id);
     setEditingRule(rule ? { ...rule } : null);
@@ -74,6 +108,10 @@ export default function NotificationConfig() {
   };
 
   const handleAddNewRule = () => {
+    if (hasUnsavedChanges()) {
+      const confirmLeave = window.confirm("You have unsaved changes in the current rule. Do you want to discard them and create a new rule?");
+      if (!confirmLeave) return;
+    }
     const newId = 'rule_' + Date.now();
     const newRule = {
       id: newId,
@@ -102,16 +140,7 @@ export default function NotificationConfig() {
     return `J${num}`;
   };
 
-  const getTagStyle = (tag) => {
-    switch (tag) {
-      case 'CRITICAL':
-        return { backgroundColor: '#FEF3C7', color: '#D97706', border: '1px solid #FDE68A' };
-      case 'URGENT':
-        return { backgroundColor: '#FEE2E2', color: '#EF4444', border: '1px solid #FCA5A5' };
-      default:
-        return { backgroundColor: '#F1F5F9', color: '#64748B', border: '1px solid #E2E8F0' };
-    }
-  };
+
 
   const getChannelLabel = (channel) => {
     switch (channel) {
@@ -185,7 +214,6 @@ export default function NotificationConfig() {
           <div className="flex flex-col gap-3" style={{ flex: 1 }}>
             {rules.map((rule) => {
               const isSelected = rule.id === selectedRuleId;
-              const tagStyle = getTagStyle(rule.tag);
               return (
                 <div
                   key={rule.id}
@@ -205,15 +233,6 @@ export default function NotificationConfig() {
                     <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary-color)' }}>
                       {rule.name}
                     </h4>
-                    <span style={{
-                      ...tagStyle,
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      padding: '2px 6px',
-                      borderRadius: '4px'
-                    }}>
-                      {rule.tag}
-                    </span>
                   </div>
                   
                   <p style={{
@@ -353,38 +372,7 @@ export default function NotificationConfig() {
                   />
                 </div>
 
-                {/* Rule Priority Tag Field */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
-                    Rule Type / Priority Tag
-                  </label>
-                  <div className="flex gap-3">
-                    {['STANDARD', 'CRITICAL', 'URGENT'].map((tagOption) => {
-                      const isSelected = editingRule.tag === tagOption;
-                      const style = getTagStyle(tagOption);
-                      return (
-                        <button
-                          key={tagOption}
-                          type="button"
-                          onClick={() => handleFieldChange('tag', tagOption)}
-                          style={{
-                            ...style,
-                            padding: '0.5rem 1rem',
-                            borderRadius: '6px',
-                            fontWeight: 600,
-                            fontSize: '0.8rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: isSelected ? '0 0 0 2px var(--primary-color)' : 'none',
-                            opacity: isSelected ? 1 : 0.6
-                          }}
-                        >
-                          {tagOption}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+
 
                 {/* Message Template textarea */}
                 <div>

@@ -7,6 +7,12 @@ export default function DelayHistory({ searchQuery }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  // Filter States
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedConsultant, setSelectedConsultant] = useState('');
+  const [minDuration, setMinDuration] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState('');
+
   const toggleRow = (id) => {
     setExpandedRows(prev => ({
       ...prev,
@@ -14,12 +20,59 @@ export default function DelayHistory({ searchQuery }) {
     }));
   };
 
-  // Filter based on search query (first name, last name, or role)
-  const filteredDelays = mockDelays.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    const fullName = `${item.firstname} ${item.name}`.toLowerCase();
-    return fullName.includes(query) || item.role.toLowerCase().includes(query);
+  // Helper to parse days from string (e.g. "5 days Late" or "2 days" -> 5 or 2)
+  const parseDays = (str) => {
+    const match = str.match(/([0-9.]+)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  // Extract unique months from all delay entries for filter select options
+  const uniqueMonths = Array.from(new Set(mockDelays.flatMap(item => 
+    item.delays.map(d => d.period.split(" (")[0])
+  )));
+
+  // Filter logic
+  const filteredDelays = mockDelays.map(item => {
+    const filteredDetails = item.delays.filter(d => {
+      // Month/Period filter
+      if (selectedMonth) {
+        const periodMonth = d.period.split(" (")[0];
+        if (periodMonth !== selectedMonth) return false;
+      }
+      // Duration filter
+      if (minDuration > 0) {
+        const days = parseDays(d.duration);
+        if (days < minDuration) return false;
+      }
+      return true;
+    });
+
+    return {
+      ...item,
+      filteredDetails
+    };
+  }).filter(item => {
+    // 1. Search Query filter (matches full name or role)
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const fullName = `${item.firstname} ${item.name}`.toLowerCase();
+      if (!fullName.includes(query) && !item.role.toLowerCase().includes(query)) {
+        return false;
+      }
+    }
+
+    // 2. Consultant filter dropdown
+    if (selectedConsultant) {
+      const fullName = `${item.firstname} ${item.name}`;
+      if (fullName !== selectedConsultant) return false;
+    }
+
+    // 3. Month & Duration filters: consultant must have at least one delay matching the filters
+    if ((selectedMonth || minDuration > 0) && item.filteredDetails.length === 0) {
+      return false;
+    }
+
+    return true;
   });
 
   // Pagination logic
@@ -36,6 +89,26 @@ export default function DelayHistory({ searchQuery }) {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  // Helper to generate display summary text dynamically
+  const getDisplaySummary = (item) => {
+    const isFiltered = selectedMonth || minDuration > 0;
+    const count = isFiltered ? item.filteredDetails.length : item.delayCount;
+    
+    let breakdownText;
+    if (isFiltered) {
+      const craCount = item.filteredDetails.filter(d => d.period.toLowerCase().includes('cra')).length;
+      const invCount = item.filteredDetails.filter(d => d.period.toLowerCase().includes('invoice')).length;
+      const parts = [];
+      if (craCount > 0) parts.push(`CRA: ${craCount}`);
+      if (invCount > 0) parts.push(`Inv: ${invCount}`);
+      breakdownText = parts.join(', ');
+    } else {
+      breakdownText = item.breakdown;
+    }
+
+    return `${count} ${count > 1 ? 'delays' : 'delay'} (${breakdownText})`;
+  };
+
   return (
     <div className="page-content flex flex-col h-full">
       {/* Header section */}
@@ -44,11 +117,118 @@ export default function DelayHistory({ searchQuery }) {
           <h1 className="page-title">CRA & Invoice Delay History</h1>
           <p className="text-muted text-sm mt-1">Reviewing bottlenecks for active closure periods</p>
         </div>
-        <button className="btn flex items-center gap-2" style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.875rem' }}>
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          className="btn flex items-center gap-2" 
+          style={{ 
+            backgroundColor: showFilters ? 'var(--primary-color)' : '#FFFFFF', 
+            border: '1px solid var(--border-color)', 
+            color: showFilters ? '#FFFFFF' : 'var(--text-main)', 
+            padding: '0.5rem 1rem', 
+            borderRadius: '6px', 
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
           <Filter size={16} />
           <span>Filter</span>
         </button>
       </div>
+
+      {/* Filter panel */}
+      {showFilters && (
+        <div className="card" style={{ 
+          padding: '1.25rem', 
+          marginBottom: '1.5rem', 
+          display: 'flex', 
+          gap: '1.5rem', 
+          backgroundColor: '#FFFFFF', 
+          border: '1px solid var(--border-color)', 
+          borderRadius: '8px',
+          alignItems: 'flex-end',
+          flexWrap: 'wrap'
+        }}>
+          {/* Consultant Dropdown */}
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '0.35rem' }}>
+              Consultant
+            </label>
+            <select
+              value={selectedConsultant}
+              onChange={(e) => setSelectedConsultant(e.target.value)}
+              className="form-input"
+              style={{ width: '100%', padding: '0.5rem', fontSize: '0.85rem', height: '38px', backgroundColor: '#FFFFFF', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+            >
+              <option value="">All Consultants</option>
+              {mockDelays.map(c => (
+                <option key={c.id} value={`${c.firstname} ${c.name}`}>{c.firstname} {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Delay Duration Threshold Dropdown */}
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '0.35rem' }}>
+              Delay Duration
+            </label>
+            <select
+              value={minDuration}
+              onChange={(e) => setMinDuration(parseFloat(e.target.value))}
+              style={{ width: '100%', padding: '0.5rem', fontSize: '0.85rem', height: '38px', backgroundColor: '#FFFFFF', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+            >
+              <option value="0">All Durations</option>
+              <option value="1">&gt; 1 day</option>
+              <option value="3">&gt;= 3 days</option>
+              <option value="5">&gt;= 5 days</option>
+            </select>
+          </div>
+
+          {/* Period Month Dropdown */}
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '0.35rem' }}>
+              Period (Month)
+            </label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="form-input"
+              style={{ width: '100%', padding: '0.5rem', fontSize: '0.85rem', height: '38px', backgroundColor: '#FFFFFF', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+            >
+              <option value="">All Months</option>
+              {uniqueMonths.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reset Filters Button */}
+          <div>
+            <button
+              onClick={() => {
+                setSelectedConsultant('');
+                setMinDuration(0);
+                setSelectedMonth('');
+              }}
+              className="btn"
+              style={{
+                height: '38px',
+                padding: '0 1.25rem',
+                fontSize: '0.85rem',
+                backgroundColor: '#F1F5F9',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-main)',
+                fontWeight: 600,
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main card */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -124,7 +304,7 @@ export default function DelayHistory({ searchQuery }) {
                           padding: '0.25rem 0.6rem',
                           borderRadius: '9999px'
                         }}>
-                          {item.delayCount} {item.delayCount > 1 ? 'delays' : 'delay'} <span style={{ fontWeight: 400, opacity: 0.85 }}>({item.breakdown})</span>
+                          {getDisplaySummary(item)}
                         </span>
                       </td>
 
@@ -157,7 +337,7 @@ export default function DelayHistory({ searchQuery }) {
                                 </tr>
                               </thead>
                               <tbody>
-                                {item.delays.map((delay) => (
+                                {item.filteredDetails.map((delay) => (
                                   <tr key={delay.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                                     <td style={{ padding: '0.75rem 0' }}>
                                       <div className="flex items-center gap-2" style={{ fontWeight: 500, color: 'var(--primary-color)' }}>
@@ -193,7 +373,7 @@ export default function DelayHistory({ searchQuery }) {
               {filteredDelays.length === 0 && (
                 <tr>
                   <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No delays history found for this search.
+                    No delays history found for this search/filter criteria.
                   </td>
                 </tr>
               )}

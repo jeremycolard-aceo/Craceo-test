@@ -13,6 +13,16 @@ import './index.css';
 function App() {
   const [currentView, setCurrentView] = useState('validations');
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const handleViewChange = (newView) => {
+    if (hasUnsavedChanges) {
+      const confirmLeave = window.confirm("You have unsaved changes in your rule configuration. Do you want to discard them and leave this page?");
+      if (!confirmLeave) return;
+      setHasUnsavedChanges(false);
+    }
+    setCurrentView(newView);
+  };
   
   // Filter sidebar state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -282,7 +292,7 @@ function App() {
         onReset={handleReset} 
       />
       <div className="main-area">
-        <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
+        <Sidebar currentView={currentView} setCurrentView={handleViewChange} />
         <div className="main-content">
           {currentView === 'consultants' && (
             <ConsultantConfiguration 
@@ -318,7 +328,7 @@ function App() {
             <DelayHistory searchQuery={searchQuery} />
           )}
           {currentView === 'notificationConfig' && (
-            <NotificationConfig />
+            <NotificationConfig setHasUnsavedChanges={setHasUnsavedChanges} />
           )}
 
 
