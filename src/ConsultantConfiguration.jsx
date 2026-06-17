@@ -873,93 +873,99 @@ export default function ConsultantConfiguration({
               </div>
 
               {activeAss && activeCli && (
-                <div className="card" style={{ border: '1px solid var(--border-color)', boxShadow: 'none', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: '#FFFFFF' }}>
-                  <div className="flex justify-between items-center mb-2">
-                    <div style={{ width: '36px', height: '36px', backgroundColor: '#EFF6FF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Building size={16} style={{ color: '#2563EB' }} />
+                <div className="card" style={{ border: '1px solid var(--border-color)', boxShadow: 'none', padding: '1.15rem', display: 'flex', flexDirection: 'column', gap: '0.55rem', backgroundColor: '#FFFFFF' }}>
+                  <div className="flex justify-between items-center mb-1">
+                    <div style={{ width: '32px', height: '32px', backgroundColor: '#EFF6FF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Building size={14} style={{ color: '#2563EB' }} />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="badge font-bold text-xs" style={{ backgroundColor: '#DEF7EC', color: '#03543F' }}>ACTIVE ACCOUNT</span>
+                      <span className="badge font-bold text-xs" style={{ backgroundColor: '#DEF7EC', color: '#03543F', padding: '3px 8px' }}>ACTIVE ACCOUNT</span>
                       {billingPanel.assignments.length > 1 && (
                         <button 
                           className="btn-text" 
-                          style={{ color: 'var(--danger-color)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                          style={{ color: 'var(--danger-color)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
                           onClick={handleDeleteActiveAssignment}
                           title="Delete this assignment"
                         >
-                          <Trash2 size={14} /> Delete Mission
+                          <Trash2 size={12} /> Delete Mission
                         </button>
                       )}
                     </div>
                   </div>
 
                   <div className="form-group mb-0">
-                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Nom du client</label>
+                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>Nom du client</label>
                     <input 
                       type="text" 
                       className="form-input" 
                       placeholder="e.g. Air Liquide" 
                       value={activeAss.client} 
                       onChange={e => handleClientNameChange(e.target.value)} 
+                      style={{ padding: '0.5rem 0.625rem' }}
                     />
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-3">
                     <div className="form-group w-full mb-0">
-                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Facturation</label>
+                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>Facturation</label>
                       <input 
                         type="text" 
                         className="form-input" 
                         placeholder="e.g. Mensuelle" 
                         value={activeCli.billingCycle || ''} 
                         onChange={e => updateActiveClientField('billingCycle', e.target.value)} 
+                        style={{ padding: '0.5rem 0.625rem' }}
                       />
                     </div>
                     <div className="form-group w-full mb-0">
-                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Date de fin de la commande</label>
+                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>Date de fin de la commande</label>
                       <input 
                         type="date" 
                         className="form-input" 
                         value={activeCli.orderEndDate || ''} 
                         onChange={e => updateActiveClientField('orderEndDate', e.target.value)} 
+                        style={{ padding: '0.5rem 0.625rem' }}
                       />
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-3">
                     <div className="form-group w-full mb-0">
-                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Start Date</label>
+                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>Start Date</label>
                       <input 
                         type="date" 
                         className="form-input" 
                         value={activeAss.startDate || ''} 
                         onChange={e => updateActiveAssignmentField('startDate', e.target.value)} 
+                        style={{ padding: '0.5rem 0.625rem' }}
                       />
                     </div>
                     <div className="form-group w-full mb-0">
-                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>End Date</label>
+                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>End Date</label>
                       <input 
                         type="date" 
                         className="form-input" 
                         value={activeAss.endDate || ''} 
                         onChange={e => updateActiveAssignmentField('endDate', e.target.value)} 
+                        style={{ padding: '0.5rem 0.625rem' }}
                       />
                     </div>
                   </div>
 
                   <div className="form-group mb-0">
-                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Linked CRA Name</label>
+                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>Linked CRA Name</label>
                     <input 
                       type="text" 
                       className="form-input" 
                       placeholder="e.g. CRA VEOLIA" 
                       value={activeAss.craName || ''} 
                       onChange={e => updateActiveAssignmentField('craName', e.target.value)} 
+                      style={{ padding: '0.5rem 0.625rem' }}
                     />
                   </div>
 
                   <div className="form-group mb-0">
-                    <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 500 }}>
+                    <label className="filter-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 500 }}>
                       <input 
                         type="checkbox" 
                         checked={!!activeCli.muted} 
@@ -967,47 +973,47 @@ export default function ConsultantConfiguration({
                           updateActiveClientField('muted', e.target.checked);
                           updateActiveAssignmentField('muted', e.target.checked);
                         }}
-                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
+                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
                       />
                       <span>Mettre en silence les rappels</span>
                     </label>
                   </div>
 
                   {/* Billing Contacts section */}
-                  <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                    <div className="flex justify-between items-center mb-3">
+                  <div style={{ marginTop: '0.35rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
+                    <div className="flex justify-between items-center mb-2">
                       <span className="form-label m-0" style={{ letterSpacing: '0.05em', fontSize: '0.75rem', fontWeight: 700 }}>BILLING CONTACTS ({activeContacts.length}/4)</span>
                       {activeContacts.length < 4 && (
                         <button 
                           type="button" 
                           className="btn-text" 
-                          style={{ fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--primary-color)' }}
+                          style={{ fontSize: '0.725rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--primary-color)' }}
                           onClick={handleAddContact}
                         >
-                          <PlusCircle size={14} /> Add Another Contact
+                          <PlusCircle size={12} /> Add Another Contact
                         </button>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                       {activeContacts.length > 0 && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 32px', gap: '0.5rem', padding: '0.25rem 0.5rem', backgroundColor: '#F8FAFC', borderRadius: '4px' }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Responsible Name</span>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Responsible Email</span>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Phone Number</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 28px', gap: '0.4rem', padding: '0.2rem 0.4rem', backgroundColor: '#F8FAFC', borderRadius: '4px' }}>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Name</span>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Email</span>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Phone</span>
                           <span></span>
                         </div>
                       )}
 
                       {activeContacts.map((contact, index) => (
-                        <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 32px', gap: '0.5rem', alignItems: 'center' }}>
+                        <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 28px', gap: '0.4rem', alignItems: 'center' }}>
                           <input 
                             type="text" 
                             className="form-input" 
                             placeholder="Jean-Pierre" 
                             value={contact.name || ''} 
                             onChange={e => handleUpdateContact(index, 'name', e.target.value)} 
-                            style={{ padding: '0.5rem' }}
+                            style={{ padding: '0.4rem 0.5rem', fontSize: '0.825rem' }}
                           />
                           <input 
                             type="email" 
@@ -1015,17 +1021,17 @@ export default function ConsultantConfiguration({
                             placeholder="j.lambert@veolia.com" 
                             value={contact.email || ''} 
                             onChange={e => handleUpdateContact(index, 'email', e.target.value)} 
-                            style={{ padding: '0.5rem' }}
+                            style={{ padding: '0.4rem 0.5rem', fontSize: '0.825rem' }}
                           />
                           <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '8px', color: 'var(--text-light)', fontSize: '0.8rem' }}>📞</span>
+                            <span style={{ position: 'absolute', left: '6px', color: 'var(--text-light)', fontSize: '0.75rem' }}>📞</span>
                             <input 
                               type="tel" 
                               className="form-input" 
                               placeholder="+33..." 
                               value={contact.phone || ''} 
                               onChange={e => handleUpdateContact(index, 'phone', e.target.value)} 
-                              style={{ padding: '0.5rem 0.5rem 0.5rem 1.75rem' }}
+                              style={{ padding: '0.4rem 0.4rem 0.4rem 1.45rem', fontSize: '0.825rem' }}
                             />
                           </div>
                           <button 
@@ -1041,7 +1047,7 @@ export default function ConsultantConfiguration({
                       ))}
 
                       {activeContacts.length === 0 && (
-                        <div style={{ border: '1px dashed var(--border-color)', padding: '1rem', borderRadius: '6px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                        <div style={{ border: '1px dashed var(--border-color)', padding: '0.75rem', borderRadius: '6px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                           No billing contacts added. Click "+ Add Another Contact" to add one.
                         </div>
                       )}
