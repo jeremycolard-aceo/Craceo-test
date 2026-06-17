@@ -892,7 +892,6 @@ export default function ValidationsPipeline({
                     <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--primary-color)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span className="text-white" style={{ fontSize: '10px' }}>📄</span>
                     </div>
-                    <span className="badge font-bold text-xs" style={{ backgroundColor: 'transparent', color: 'var(--text-main)' }}><Paperclip size={12} className="inline ml-1" /></span>
                   </div>
 
                   <div className="form-group">
@@ -906,8 +905,7 @@ export default function ValidationsPipeline({
                       type="text" 
                       className="form-input" 
                       value={selectedClient.billingCycle || ''} 
-                      readOnly
-                      style={{ backgroundColor: 'var(--bg-color)' }}
+                      onChange={(e) => handleClientFieldChange('billingCycle', e.target.value)}
                     />
                   </div>
 

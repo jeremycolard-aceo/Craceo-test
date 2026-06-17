@@ -21,6 +21,13 @@ export const mockConsultants = [
         managerEmail: "j.lambert@veolia.com",
         billingManagers: ["j.lambert@veolia.com"],
         phone: "+33 1 23 45 67 89",
+        billingContacts: [
+          {
+            name: "Jean-Pierre Lambert",
+            email: "j.lambert@veolia.com",
+            phone: "+33 1 23 45 67 89"
+          }
+        ],
         poNumber: "",
         orderEndDate: "2024-12-31",
         poUploaded: false,
@@ -63,6 +70,13 @@ export const mockConsultants = [
         managerEmail: "luc.martin@globaltech.com",
         billingManagers: ["luc.martin@globaltech.com"],
         phone: "+33 1 11 22 33 44",
+        billingContacts: [
+          {
+            name: "Luc Martin",
+            email: "luc.martin@globaltech.com",
+            phone: "+33 1 11 22 33 44"
+          }
+        ],
         poNumber: "",
         orderEndDate: "2025-10-31",
         poUploaded: false,
