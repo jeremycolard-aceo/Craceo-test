@@ -5,6 +5,8 @@ import ConsultantConfiguration from './ConsultantConfiguration';
 import ValidationsPipeline from './ValidationsPipeline';
 import Notifications from './Notifications';
 import FilterSidebar from './FilterSidebar';
+import DelayHistory from './DelayHistory';
+import NotificationConfig from './NotificationConfig';
 import { mockConsultants } from './data';
 import './index.css';
 
@@ -311,6 +313,12 @@ function App() {
               consultants={consultants}
               updateConsultant={updateConsultant}
             />
+          )}
+          {currentView === 'delayHistory' && (
+            <DelayHistory searchQuery={searchQuery} />
+          )}
+          {currentView === 'notificationConfig' && (
+            <NotificationConfig />
           )}
 
 

@@ -110,3 +110,124 @@ export const mockConsultants = [
 ];
 
 export const craTypes = ["CRA INETUM", "BOOND", "CRA LBC", "CRA NEW"];
+
+export const mockDelays = [
+  {
+    id: 1,
+    firstname: "Nicolas",
+    name: "Sanchez",
+    initials: "NS",
+    role: "Senior Project Manager",
+    delayCount: 3,
+    breakdown: "CRA: 2, Inv: 1",
+    avgDuration: "Avg: 3.3 days",
+    lastResolution: "10/02/2024",
+    delays: [
+      {
+        id: "d1_1",
+        period: "Jan 2024 (CRA)",
+        timestamp: "05/02/2024 10:26",
+        duration: "5 days Late",
+        resolution: "06/02/2024"
+      },
+      {
+        id: "d1_2",
+        period: "Mar 2024 (CRA)",
+        timestamp: "04/04/2024 14:15",
+        duration: "3 days Late",
+        resolution: "05/04/2024"
+      },
+      {
+        id: "d1_3",
+        period: "May 2024 (Invoice)",
+        timestamp: "02/06/2024 09:45",
+        duration: "2 days Late",
+        resolution: "03/06/2024"
+      }
+    ]
+  },
+  {
+    id: 2,
+    firstname: "Guillaume",
+    name: "Duluc",
+    initials: "GD",
+    role: "Strategy Consultant",
+    delayCount: 1,
+    breakdown: "CRA: 1",
+    avgDuration: "2 days",
+    lastResolution: "08/06/2024",
+    delays: [
+      {
+        id: "d2_1",
+        period: "May 2024 (CRA)",
+        timestamp: "03/06/2024 11:30",
+        duration: "2 days Late",
+        resolution: "08/06/2024"
+      }
+    ]
+  },
+  {
+    id: 4,
+    firstname: "Anaëlle",
+    name: "Juarez",
+    initials: "AJ",
+    role: "UX/UI Designer",
+    delayCount: 2,
+    breakdown: "Inv: 2",
+    avgDuration: "Avg: 1 day",
+    lastResolution: "02/03/2024",
+    delays: [
+      {
+        id: "d4_1",
+        period: "Jan 2024 (Invoice)",
+        timestamp: "02/02/2024 09:15",
+        duration: "1 day Late",
+        resolution: "02/02/2024"
+      },
+      {
+        id: "d4_2",
+        period: "Feb 2024 (Invoice)",
+        timestamp: "02/03/2024 09:00",
+        duration: "1 day Late",
+        resolution: "03/03/2024"
+      }
+    ]
+  }
+];
+
+export const mockNotificationRules = [
+  {
+    id: "rule_1",
+    name: "Monthly Submission J-1",
+    tag: "CRITICAL",
+    active: true,
+    messageTemplate: "🚨 Attention, dernier rappel ! Votre CRA doit être complétée avant la fin de la journée. Tout retard pourrait impacter vos avantages. Merci de votre réactivité. 📋",
+    channels: ["personal"],
+    relativeDay: -1,
+    timeOfDay: "09:00",
+    lastUpdated: "2 days ago by Admin"
+  },
+  {
+    id: "rule_2",
+    name: "Initial Reminder J0",
+    tag: "STANDARD",
+    active: true,
+    messageTemplate: "The CRA period is now open for entry. Please submit your timesheet as soon as possible.",
+    channels: ["general"],
+    relativeDay: 0,
+    timeOfDay: "10:30",
+    lastUpdated: "5 days ago by Admin"
+  },
+  {
+    id: "rule_3",
+    name: "Late Reminder J+2",
+    tag: "URGENT",
+    active: true,
+    messageTemplate: "Action required: Your CRA is now 2 days late. Please submit it immediately to avoid penalties.",
+    channels: ["email"],
+    relativeDay: 2,
+    timeOfDay: "14:00",
+    lastUpdated: "1 week ago by Admin"
+  }
+];
+

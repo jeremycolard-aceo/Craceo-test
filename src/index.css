@@ -999,7 +999,17 @@ body {
   background-color: #FDFDFD;
 }
 
+/* Delay History and Notification Configuration styles */
+.hover-bg-slate:hover {
+  background-color: #F8FAFC !important;
+}
 
+.btn-add-rule-dashed:hover {
+  background-color: #F8FAFC !important;
+  border-color: var(--primary-color) !important;
+}
 
-
-
+.hover-shadow-sm:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
+}
