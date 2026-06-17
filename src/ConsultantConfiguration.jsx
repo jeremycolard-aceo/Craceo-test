@@ -339,6 +339,16 @@ export default function ConsultantConfiguration({
       return;
     }
 
+    // Validate that every billing contact has a non-empty name
+    for (const cli of billingPanel.clients) {
+      const contacts = cli.billingContacts || [];
+      const hasEmptyContactName = contacts.some(c => !c.name || !c.name.trim());
+      if (hasEmptyContactName) {
+        alert("Le nom du responsable est obligatoire pour tous les contacts de facturation.");
+        return;
+      }
+    }
+
     const finalClients = billingPanel.clients.map(cli => {
       const contacts = cli.billingContacts || [];
       return {
@@ -818,7 +828,7 @@ export default function ConsultantConfiguration({
       {billingPanel.isOpen && (
         <>
           <div className="side-panel-overlay" onClick={handleCloseBillingPanel}></div>
-          <div className="side-panel" style={{ width: '600px' }}>
+          <div className="side-panel" style={{ width: '600px', height: '100vh', display: 'flex', flexDirection: 'column' }}>
             <div className="panel-header">
               <div className="flex items-center gap-5">
                 <div className="avatar">
@@ -836,7 +846,7 @@ export default function ConsultantConfiguration({
               <button className="btn-text text-light text-xl" onClick={handleCloseBillingPanel}>&times;</button>
             </div>
             
-            <div className="panel-body flex flex-col gap-4" style={{ overflowY: 'auto', flex: 1, maxHeight: 'calc(100vh - 160px)' }}>
+            <div className="panel-body flex flex-col gap-4" style={{ overflowY: 'auto', flex: 1 }}>
               <h4 className="font-bold mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary-color)' }}>
                 <span style={{ width: '4px', height: '16px', backgroundColor: 'var(--accent-color)', display: 'inline-block' }}></span>
                 Billing & Contact Information
