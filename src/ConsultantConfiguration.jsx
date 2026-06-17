@@ -847,7 +847,7 @@ export default function ConsultantConfiguration({
               <button className="btn-text text-light text-xl" onClick={handleCloseBillingPanel}>&times;</button>
             </div>
             
-            <div className="panel-body flex flex-col gap-4" style={{ overflowY: 'auto', flex: 1 }}>
+            <div className="panel-body flex flex-col gap-4" style={{ overflowY: 'auto', flex: '1 1 0%', minHeight: 0 }}>
               <h4 className="font-bold mb-2" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary-color)' }}>
                 <span style={{ width: '4px', height: '16px', backgroundColor: 'var(--accent-color)', display: 'inline-block' }}></span>
                 Billing & Contact Information
