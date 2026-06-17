@@ -24,7 +24,7 @@ export default function Sidebar({ currentView, setCurrentView }) {
           onClick={() => setCurrentView('notifications')}
         >
           <Bell size={18} />
-          <span>Notifications</span>
+          <span>Logs</span>
         </div>
         
         {/* New Menus */}

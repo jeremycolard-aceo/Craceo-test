@@ -106,7 +106,7 @@ export default function Notifications({ notifications }) {
     <div className="page-content flex flex-col h-full">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="page-title">Notifications</h1>
+          <h1 className="page-title">Logs</h1>
           <p className="text-muted text-sm mt-2">Stay updated on your team's activity and system alerts.</p>
         </div>
       </div>
