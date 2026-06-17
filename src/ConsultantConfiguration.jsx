@@ -24,7 +24,7 @@ export default function ConsultantConfiguration({
   // Custom Modal State
   const [modal, setModal] = useState({
     isOpen: false,
-    type: '', // 'addCra' | 'deleteCra' | 'assignmentDetail' | 'deleteAssignment'
+    type: '', // 'addCra' | 'deleteCra' | 'assignmentDetail' | 'deleteAssignment' | 'deleteConsultant'
     consultantId: null,
     targetId: null, // assignment id
     title: '',
@@ -39,7 +39,8 @@ export default function ConsultantConfiguration({
     phone: '',
     poNumber: '',
     orderEndDate: '',
-    muted: false
+    muted: false,
+    consultantName: ''
   });
 
   const handleAddBillingEmail = () => {
@@ -77,7 +78,8 @@ export default function ConsultantConfiguration({
       phone: '',
       poNumber: '',
       orderEndDate: '',
-      muted: false
+      muted: false,
+      consultantName: ''
     });
     setNewBillingEmail('');
   };
@@ -281,6 +283,36 @@ export default function ConsultantConfiguration({
     closeModal();
   };
 
+  const openDeleteConsultantModal = (consultantId, consultantName) => {
+    setModal({
+      isOpen: true,
+      type: 'deleteConsultant',
+      consultantId,
+      title: 'Archive and Delete Consultant',
+      consultantName,
+      craName: '',
+      client: '',
+      startDate: '',
+      endDate: '',
+      managerName: '',
+      billingCycle: 'Monthly',
+      managerEmail: '',
+      billingManagers: [],
+      phone: '',
+      poNumber: '',
+      orderEndDate: '',
+      muted: false
+    });
+  };
+
+  const handleDeleteConsultantConfirm = () => {
+    updateConsultant(modal.consultantId, { status: "Left / Archived" });
+    if (editingConsultant && editingConsultant.id === modal.consultantId) {
+      setEditingConsultant(null);
+    }
+    closeModal();
+  };
+
   return (
     <div className="page-content">
       <div className="page-header flex justify-between items-center mb-6">
@@ -386,9 +418,7 @@ export default function ConsultantConfiguration({
                           className="dropdown-item" 
                           style={{ color: 'var(--danger-color)' }}
                           onClick={() => {
-                            if (window.confirm(`Are you sure you want to delete and archive the consultant ${consultant.firstname} ${consultant.name}?`)) {
-                              updateConsultant(consultant.id, { status: "Left / Archived" });
-                            }
+                            openDeleteConsultantModal(consultant.id, `${consultant.firstname} ${consultant.name}`);
                             setActiveCardMenu(null);
                           }}
                         >
@@ -583,10 +613,7 @@ export default function ConsultantConfiguration({
                   className="btn btn-outline w-full p-4" 
                   style={{ color: 'var(--danger-color)', borderColor: 'var(--danger-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
                   onClick={() => {
-                    if (window.confirm(`Are you sure you want to delete and archive the consultant ${editingConsultant.firstname} ${editingConsultant.name}?`)) {
-                      updateConsultant(editingConsultant.id, { status: "Left / Archived" });
-                      setEditingConsultant(null);
-                    }
+                    openDeleteConsultantModal(editingConsultant.id, `${editingConsultant.firstname} ${editingConsultant.name}`);
                   }}
                 >
                   <Trash2 size={18} /> Delete / Archive Consultant
@@ -767,6 +794,11 @@ export default function ConsultantConfiguration({
                   Are you sure you want to delete this active assignment? This will also remove the linked billing configuration.
                 </p>
               )}
+              {modal.type === 'deleteConsultant' && (
+                <p className="m-0 text-sm text-muted">
+                  Are you sure you want to delete and archive the consultant <strong>{modal.consultantName}</strong>?
+                </p>
+              )}
             </div>
             
             <div className="modal-footer">
@@ -776,6 +808,9 @@ export default function ConsultantConfiguration({
               )}
               {modal.type === 'deleteAssignment' && (
                 <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteAssignmentConfirm}>Delete</button>
+              )}
+              {modal.type === 'deleteConsultant' && (
+                <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteConsultantConfirm}>Confirm Archive</button>
               )}
             </div>
           </div>
