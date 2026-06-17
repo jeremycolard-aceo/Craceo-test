@@ -873,7 +873,7 @@ export default function ConsultantConfiguration({
               </div>
 
               {activeAss && activeCli && (
-                <div className="card" style={{ border: '1px solid var(--border-color)', boxShadow: 'none', padding: '1.15rem', display: 'flex', flexDirection: 'column', gap: '0.55rem', backgroundColor: '#FFFFFF' }}>
+                <div className="card" style={{ border: '1px solid var(--border-color)', boxShadow: 'none', padding: '1.15rem', display: 'flex', flexDirection: 'column', gap: '0.55rem', backgroundColor: '#FFFFFF', flexShrink: 0 }}>
                   <div className="flex justify-between items-center mb-1">
                     <div style={{ width: '32px', height: '32px', backgroundColor: '#EFF6FF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Building size={14} style={{ color: '#2563EB' }} />
