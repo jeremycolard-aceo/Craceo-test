@@ -48,7 +48,23 @@ export default function ValidationsPipeline({
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkSelectedIds, setBulkSelectedIds] = useState([]);
   const [bulkValidationModalOpen, setBulkValidationModalOpen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('All');
+  const getCurrentMonthString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  };
+
+  const [startDate, setStartDate] = useState(getCurrentMonthString());
+  const [endDate, setEndDate] = useState(getCurrentMonthString());
+
+  const handleStartChange = (val) => {
+    setStartDate(val);
+    if (endDate < val) {
+      setEndDate(val);
+    }
+  };
+
   const [showArchives, setShowArchives] = useState(false);
 
   const handleBulkValidateConfirm = () => {
@@ -224,11 +240,17 @@ export default function ValidationsPipeline({
     setValidationModal({ isOpen: false, consultant: null });
   };
 
-  // Filter by month
+  // Filter by month range (start to end inclusive)
   const monthFilteredConsultants = filteredConsultants.filter(c => {
-    if (selectedMonth === 'All') return true;
-    const cardDate = new Date(c.updatedAt || Date.now());
-    return cardDate.getMonth() === parseInt(selectedMonth, 10);
+    const cardDate = new Date(c.updatedAt || 0);
+    
+    const [startYear, startMonth] = startDate.split('-').map(Number);
+    const [endYear, endMonth] = endDate.split('-').map(Number);
+    
+    const startD = new Date(startYear, startMonth - 1, 1, 0, 0, 0, 0);
+    const endD = new Date(endYear, endMonth, 0, 23, 59, 59, 999);
+    
+    return cardDate >= startD && cardDate <= endD;
   });
 
   // Classify consultants into pipeline columns
@@ -271,36 +293,48 @@ export default function ValidationsPipeline({
           <p className="text-muted text-sm mt-2">Review and manage consultant timesheets across billing stages.</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="form-input"
-            style={{ 
-              width: '160px', 
-              padding: '6px 12px', 
-              fontSize: '0.875rem', 
-              borderRadius: '6px', 
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--card-bg)',
-              color: 'var(--text-main)',
-              cursor: 'pointer',
-              height: '38px'
-            }}
-          >
-            <option value="All">Tous les mois</option>
-            <option value="0">Janvier</option>
-            <option value="1">Février</option>
-            <option value="2">Mars</option>
-            <option value="3">Avril</option>
-            <option value="4">Mai</option>
-            <option value="5">Juin</option>
-            <option value="6">Juillet</option>
-            <option value="7">Août</option>
-            <option value="8">Septembre</option>
-            <option value="9">Octobre</option>
-            <option value="10">Novembre</option>
-            <option value="11">Décembre</option>
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Début:</span>
+            <input
+              type="month"
+              value={startDate}
+              onChange={(e) => handleStartChange(e.target.value)}
+              className="form-input"
+              style={{
+                width: '145px',
+                padding: '6px 12px',
+                fontSize: '0.875rem',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--card-bg)',
+                color: 'var(--text-main)',
+                cursor: 'pointer',
+                height: '38px'
+              }}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Fin:</span>
+            <input
+              type="month"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="form-input"
+              style={{
+                width: '145px',
+                padding: '6px 12px',
+                fontSize: '0.875rem',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--card-bg)',
+                color: 'var(--text-main)',
+                cursor: 'pointer',
+                height: '38px'
+              }}
+              min={startDate}
+            />
+          </div>
 
           <button className="btn btn-outline" onClick={onOpenFilter} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '38px' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="6" x2="6" y1="12" y2="12"/><line x1="2" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="6" x2="6" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
