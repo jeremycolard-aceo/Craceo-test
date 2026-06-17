@@ -414,16 +414,18 @@ export default function ConsultantConfiguration({
                         >
                           ↩ Undo Last Action
                         </button>
-                        <button 
-                          className="dropdown-item" 
-                          style={{ color: 'var(--danger-color)' }}
-                          onClick={() => {
-                            openDeleteConsultantModal(consultant.id, `${consultant.firstname} ${consultant.name}`);
-                            setActiveCardMenu(null);
-                          }}
-                        >
-                          ❌ Delete / Archive
-                        </button>
+                        {consultant.status !== 'Left / Archived' && (
+                          <button 
+                            className="dropdown-item" 
+                            style={{ color: 'var(--danger-color)' }}
+                            onClick={() => {
+                              openDeleteConsultantModal(consultant.id, `${consultant.firstname} ${consultant.name}`);
+                              setActiveCardMenu(null);
+                            }}
+                          >
+                            ❌ Delete / Archive
+                          </button>
+                        )}
                       </div>
                     </>
                   )}
@@ -608,7 +610,7 @@ export default function ConsultantConfiguration({
               <button className="btn btn-primary w-full p-4" onClick={saveConsultantDetails}>
                 <Save size={18} /> Save Changes
               </button>
-              {!creatingConsultant && (
+              {!creatingConsultant && editingConsultant.status !== 'Left / Archived' && (
                 <button 
                   className="btn btn-outline w-full p-4" 
                   style={{ color: 'var(--danger-color)', borderColor: 'var(--danger-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
