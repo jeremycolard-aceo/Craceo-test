@@ -921,75 +921,27 @@ export default function ValidationsPipeline({
                           key={idx}
                           style={{
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
+                            flexDirection: 'column',
+                            gap: '4px',
                             padding: '12px 16px',
                             backgroundColor: '#F8FAFC',
                             border: '1px solid #E2E8F0',
                             borderRadius: '8px',
                           }}
                         >
-                          <span style={{ fontWeight: 500, fontSize: '0.9rem', color: '#1E293B' }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1E293B' }}>
                             {contact.name || 'Unnamed Contact'}
-                          </span>
-                          
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            {contact.phone && (
-                              <div className="tooltip-container" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-                                <Phone size={14} style={{ color: '#475569' }} />
-                                <div 
-                                  className="tooltip-text" 
-                                  style={{
-                                    visibility: 'hidden',
-                                    position: 'absolute',
-                                    bottom: '125%',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    backgroundColor: '#1E293B',
-                                    color: '#FFFFFF',
-                                    padding: '6px 10px',
-                                    borderRadius: '6px',
-                                    whiteSpace: 'nowrap',
-                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                    zIndex: 10,
-                                    opacity: 0,
-                                    transition: 'opacity 0.2s',
-                                    fontSize: '0.75rem',
-                                    pointerEvents: 'none'
-                                  }}
-                                >
-                                  {contact.phone}
-                                </div>
-                              </div>
-                            )}
-
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
                             {contact.email && (
-                              <div className="tooltip-container" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-                                <Mail size={14} style={{ color: '#475569' }} />
-                                <div 
-                                  className="tooltip-text" 
-                                  style={{
-                                    visibility: 'hidden',
-                                    position: 'absolute',
-                                    bottom: '125%',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    backgroundColor: '#1E293B',
-                                    color: '#FFFFFF',
-                                    padding: '6px 10px',
-                                    borderRadius: '6px',
-                                    whiteSpace: 'nowrap',
-                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                    zIndex: 10,
-                                    opacity: 0,
-                                    transition: 'opacity 0.2s',
-                                    fontSize: '0.75rem',
-                                    pointerEvents: 'none'
-                                  }}
-                                >
-                                  {contact.email}
-                                </div>
-                              </div>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Mail size={12} style={{ flexShrink: 0 }} /> {contact.email}
+                              </span>
+                            )}
+                            {contact.phone && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Phone size={12} style={{ flexShrink: 0 }} /> {contact.phone}
+                              </span>
                             )}
                           </div>
                         </div>
