@@ -266,7 +266,7 @@ export default function DelayHistory({ searchQuery }) {
                     >
                       {/* Consultant info with avatar */}
                       <td style={{ padding: '1rem 1.5rem' }}>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                           <div style={{
                             width: '32px',
                             height: '32px',

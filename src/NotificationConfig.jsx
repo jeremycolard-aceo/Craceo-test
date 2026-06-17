@@ -421,7 +421,7 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                       }}
                       className="justify-between"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <input
                           type="checkbox"
                           checked={editingRule.channels?.includes('general')}
@@ -465,7 +465,7 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                       }}
                       className="justify-between"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <input
                           type="checkbox"
                           checked={editingRule.channels?.includes('personal')}
@@ -509,7 +509,7 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                       }}
                       className="justify-between"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <input
                           type="checkbox"
                           checked={editingRule.channels?.includes('email')}
