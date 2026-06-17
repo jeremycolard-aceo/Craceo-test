@@ -316,6 +316,7 @@ export default function ConsultantConfiguration({
   };
 
   const handleAddContact = () => {
+    if (activeContacts.length >= 4) return;
     const newContact = { name: '', email: '', phone: '' };
     updateActiveClientField('billingContacts', [...activeContacts, newContact]);
   };
@@ -975,15 +976,17 @@ export default function ConsultantConfiguration({
                   {/* Billing Contacts section */}
                   <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                     <div className="flex justify-between items-center mb-3">
-                      <span className="form-label m-0" style={{ letterSpacing: '0.05em', fontSize: '0.75rem', fontWeight: 700 }}>BILLING CONTACTS</span>
-                      <button 
-                        type="button" 
-                        className="btn-text" 
-                        style={{ fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--primary-color)' }}
-                        onClick={handleAddContact}
-                      >
-                        <PlusCircle size={14} /> Add Another Contact
-                      </button>
+                      <span className="form-label m-0" style={{ letterSpacing: '0.05em', fontSize: '0.75rem', fontWeight: 700 }}>BILLING CONTACTS ({activeContacts.length}/4)</span>
+                      {activeContacts.length < 4 && (
+                        <button 
+                          type="button" 
+                          className="btn-text" 
+                          style={{ fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--primary-color)' }}
+                          onClick={handleAddContact}
+                        >
+                          <PlusCircle size={14} /> Add Another Contact
+                        </button>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
