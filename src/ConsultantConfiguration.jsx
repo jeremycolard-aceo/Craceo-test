@@ -880,16 +880,14 @@ export default function ConsultantConfiguration({
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="badge font-bold text-xs" style={{ backgroundColor: '#DEF7EC', color: '#03543F', padding: '3px 8px' }}>ACTIVE ACCOUNT</span>
-                      {billingPanel.assignments.length > 1 && (
-                        <button 
-                          className="btn-text" 
-                          style={{ color: 'var(--danger-color)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
-                          onClick={handleDeleteActiveAssignment}
-                          title="Delete this assignment"
-                        >
-                          <Trash2 size={12} /> Delete Mission
-                        </button>
-                      )}
+                      <button 
+                        className="btn-text" 
+                        style={{ color: 'var(--danger-color)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                        onClick={handleDeleteActiveAssignment}
+                        title="Delete this assignment"
+                      >
+                        <Trash2 size={12} /> Delete Mission
+                      </button>
                     </div>
                   </div>
 

@@ -56,7 +56,7 @@ export const mockConsultants = [
     initials: "GD",
     muted: false,
     cras: [
-      { id: 'cra4', name: "CRA BOOND", validated: true }
+      { id: 'cra4', name: "BOUND", validated: true }
     ],
     assignments: [
       { id: 'ass2', client: "Global Tech", startDate: "2024-03-01", endDate: "2025-09-30" }
