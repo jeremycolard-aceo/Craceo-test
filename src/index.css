@@ -737,15 +737,15 @@ body {
 
 /* Validations pipeline specific badges */
 .badge-validated {
-  background-color: #F8B335;
+  background-color: #10B981;
   color: #FFFFFF;
-  border: 1px solid #F8B335;
+  border: 1px solid #10B981;
   transition: all 0.2s;
 }
 
 .badge-validated:hover {
-  background-color: #E29C21;
-  border-color: #E29C21;
+  background-color: #059669;
+  border-color: #059669;
 }
 
 .badge-unvalidated {

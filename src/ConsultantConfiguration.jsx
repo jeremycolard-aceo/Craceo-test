@@ -23,6 +23,7 @@ export default function ConsultantConfiguration({
   const [creatingConsultant, setCreatingConsultant] = useState(false); // Creating employee status
   const [activeCardMenu, setActiveCardMenu] = useState(null); // ID of consultant card menu open
   const [showArchived, setShowArchived] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
 
   // Billing and Assignment Side Panel State
   const [billingPanel, setBillingPanel] = useState({
@@ -290,6 +291,29 @@ export default function ConsultantConfiguration({
     }));
   };
 
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      handleFile(file);
+    }
+  };
+
+  const handleFile = (file) => {
+    updateActiveClientField('poUploaded', true);
+    updateActiveClientField('poFileName', file.name);
+    const url = URL.createObjectURL(file);
+    updateActiveClientField('poFileUrl', url);
+  };
+
   const updateActiveAssignmentField = (field, value) => {
     setBillingPanel(prev => ({
       ...prev,
@@ -460,6 +484,23 @@ export default function ConsultantConfiguration({
     });
   };
 
+  const openDeleteConsultantPermanentlyModal = (consultantId, consultantName) => {
+    setModal({
+      ...modal,
+      isOpen: true,
+      type: 'deleteConsultantPermanently',
+      consultantId,
+      title: 'Permanently Delete Consultant',
+      consultantName
+    });
+  };
+
+  const handleDeleteConsultantPermanentlyConfirm = () => {
+    setConsultants(prev => prev.filter(c => c.id !== modal.consultantId));
+    setEditingConsultant(null);
+    closeModal();
+  };
+
   const handleDeleteConsultantConfirm = () => {
     updateConsultant(modal.consultantId, { status: "Left / Archived" });
     if (editingConsultant && editingConsultant.id === modal.consultantId) {
@@ -502,7 +543,7 @@ export default function ConsultantConfiguration({
           return (
             <div key={consultant.id} className="card" style={{ width: '380px', opacity: consultant.status !== 'Active' ? 0.75 : 1 }}>
               <div className="card-header">
-                <div className="flex items-center gap-5">
+                <div className="flex items-center" style={{ gap: '24px' }}>
                   <div className="avatar avatar-lg">{consultant.initials}</div>
                   <div>
                     <h3 className="m-0 font-bold" style={{ color: 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
@@ -756,6 +797,17 @@ export default function ConsultantConfiguration({
               </div>
 
               <div className="form-group mb-0">
+                <label className="form-label">Webhook</label>
+                <input 
+                  type="url" 
+                  className="form-input" 
+                  placeholder="https://example.com/webhook"
+                  value={editingConsultant.webhook || ''} 
+                  onChange={e => setEditingConsultant({...editingConsultant, webhook: e.target.value})} 
+                />
+              </div>
+
+              <div className="form-group mb-0 mt-3">
                 <label className="form-label">Comments</label>
                 <textarea className="form-input" rows="3" value={editingConsultant.comments || ''} onChange={e => setEditingConsultant({...editingConsultant, comments: e.target.value})}></textarea>
               </div>
@@ -774,6 +826,17 @@ export default function ConsultantConfiguration({
                   }}
                 >
                   <Trash2 size={18} /> Delete / Archive Consultant
+                </button>
+              )}
+              {!creatingConsultant && editingConsultant.status === 'Left / Archived' && (
+                <button 
+                  className="btn btn-outline w-full p-4 mt-2" 
+                  style={{ color: 'var(--danger-color)', borderColor: 'var(--danger-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#FEF2F2' }} 
+                  onClick={() => {
+                    openDeleteConsultantPermanentlyModal(editingConsultant.id, `${editingConsultant.firstname} ${editingConsultant.name}`);
+                  }}
+                >
+                  <Trash2 size={18} /> Delete Permanently
                 </button>
               )}
             </div>
@@ -807,6 +870,11 @@ export default function ConsultantConfiguration({
                   Are you sure you want to delete and archive the consultant <strong>{modal.consultantName}</strong>?
                 </p>
               )}
+              {modal.type === 'deleteConsultantPermanently' && (
+                <p className="m-0 text-sm text-muted">
+                  Are you sure you want to <strong>permanently delete</strong> the consultant <strong>{modal.consultantName}</strong>? This action cannot be undone.
+                </p>
+              )}
             </div>
             
             <div className="modal-footer">
@@ -819,6 +887,9 @@ export default function ConsultantConfiguration({
               )}
               {modal.type === 'deleteConsultant' && (
                 <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteConsultantConfirm}>Confirm Archive</button>
+              )}
+              {modal.type === 'deleteConsultantPermanently' && (
+                <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger-color)' }} onClick={handleDeleteConsultantPermanentlyConfirm}>Permanently Delete</button>
               )}
             </div>
           </div>
@@ -1050,6 +1121,63 @@ export default function ConsultantConfiguration({
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  <div className="form-group mb-0" style={{ marginTop: '0.35rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>PURCHASE ORDER NUMBER</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={activeCli.poNumber || ''} 
+                      onChange={(e) => updateActiveClientField('poNumber', e.target.value)}
+                      style={{ padding: '0.5rem 0.625rem' }}
+                    />
+                  </div>
+
+                  <div className="form-group mb-0 mt-2">
+                    <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>UPLOAD PURCHASE ORDER</label>
+                    {activeCli.poUploaded ? (
+                      <div className="uploaded-file-box" style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#F8FAFC' }}>
+                        <div className="flex items-center gap-3">
+                          <div className="file-icon-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', backgroundColor: '#EFF6FF', borderRadius: '6px' }}>
+                            <FileText size={18} className="text-primary" />
+                          </div>
+                          <div className="flex-1" style={{ minWidth: 0 }}>
+                            <div className="font-bold text-sm text-ellipsis overflow-hidden whitespace-nowrap" style={{ color: 'var(--primary-color)' }}>
+                              {activeCli.poFileName || "purchase_order.pdf"}
+                            </div>
+                            <div className="text-xs text-success-color font-medium">✓ Uploaded & Linked</div>
+                          </div>
+                          <button 
+                            type="button"
+                            className="btn-text"
+                            onClick={() => { updateActiveClientField('poUploaded', false); updateActiveClientField('poFileName', ''); }}
+                            style={{ color: 'var(--danger-color)', fontSize: '0.75rem', fontWeight: 600, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`dropzone ${isDraggingFile ? 'active' : ''}`}
+                        onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
+                        onDragLeave={() => setIsDraggingFile(false)}
+                        onDrop={handleFileDrop}
+                        onClick={() => document.getElementById('po-file-input').click()}
+                        style={{ padding: '1rem', border: '1px dashed var(--border-color)', borderRadius: '8px', textAlign: 'center', cursor: 'pointer', backgroundColor: isDraggingFile ? '#F1F5F9' : '#FFFFFF' }}
+                      >
+                        <Paperclip size={20} className="text-muted mb-2 mx-auto" />
+                        <p className="m-0 text-sm font-semibold">Click or drag and drop your invoice here</p>
+                        <p className="text-xs text-muted mt-1">PDF, PNG, JPG up to 10MB</p>
+                        <input 
+                          type="file" 
+                          id="po-file-input" 
+                          style={{ display: 'none' }} 
+                          onChange={handleFileSelect} 
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

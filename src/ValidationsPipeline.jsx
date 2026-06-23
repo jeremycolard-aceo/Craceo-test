@@ -228,6 +228,16 @@ export default function ValidationsPipeline({
     }));
   };
 
+  // Toggle Client PO validation status
+  const handleToggleClientValidation = (consultantId, clientId) => {
+    updateConsultant(consultantId, (c) => ({
+      clients: c.clients.map(client => 
+        client.id === clientId ? { ...client, sent: !client.sent } : client
+      )
+    }));
+  };
+
+
   // Open final validation modal
   const handleCardClick = (consultant) => {
     setValidationModal({
@@ -502,8 +512,7 @@ export default function ValidationsPipeline({
                     </span>
                   ))}
                 </div>
-                <div className="flex justify-between items-center text-xs text-muted">
-                  <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px' }}>{c.initials}</div>
+                <div className="flex justify-end items-center text-xs text-muted">
                   <span className="font-semibold text-light">{formatTimeAgo(c.updatedAt)}</span>
                 </div>
               </div>
@@ -583,35 +592,41 @@ export default function ValidationsPipeline({
                 </div>
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {c.clients.filter(client => isClientActiveInMonth(c, client)).map(client => {
-                    let badgeClass = "badge-po-pending";
+                    let badgeClass = "badge-unvalidated";
                     let prefix = "";
-                    let title = "PO pending. Click to upload/send.";
+                    let title = "PO not sent. Click to mark as sent.";
                     if (client.sent) {
-                      badgeClass = "badge-po-uploaded";
+                      badgeClass = "badge-validated";
                       prefix = "✓ ";
-                      title = "Sent / Validated. Click to edit.";
-                    } else if (client.poUploaded) {
-                      badgeClass = "badge-blue";
-                      prefix = "📄 ";
-                      title = "PO Uploaded. Click to mark as sent.";
+                      title = "Sent / Validated. Click to invalidate.";
                     }
                     
                     return (
                       <span 
                         key={client.id} 
                         className={`badge cursor-pointer ${badgeClass}`}
-                        onClick={() => handleClientClick(c, client)}
+                        onClick={() => handleToggleClientValidation(c.id, client.id)}
                         title={title}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', paddingRight: '4px' }}
                       >
                         {prefix}{client.name}
                         {client.muted && <BellOff size={10} style={{ color: 'inherit' }} title="Project reminders muted" />}
+                        <button 
+                          className="btn-text p-0 m-0 flex items-center justify-center" 
+                          style={{ color: 'inherit', marginLeft: '4px', opacity: 0.8 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleClientClick(c, client);
+                          }}
+                          title="View Details"
+                        >
+                          <Eye size={12} />
+                        </button>
                       </span>
                     );
                   })}
                 </div>
-                <div className="flex justify-between items-center text-xs text-muted">
-                  <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px', backgroundColor: '#64748B' }}>{c.initials}</div>
+                <div className="flex justify-end items-center text-xs text-muted">
                   <span className="font-semibold text-light">{formatTimeAgo(c.updatedAt)}</span>
                 </div>
               </div>
@@ -832,8 +847,7 @@ export default function ValidationsPipeline({
                   )}
                 </div>
 
-                <div className="flex justify-between items-center text-xs text-muted">
-                  <div className="avatar" style={{ width: '24px', height: '24px', fontSize: '10px' }}>{c.initials}</div>
+                <div className="flex justify-end items-center text-xs text-muted">
                   <span className="font-semibold text-light">{formatTimeAgo(c.updatedAt)}</span>
                 </div>
               </div>
@@ -953,16 +967,6 @@ export default function ValidationsPipeline({
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">PURCHASE ORDER NUMBER</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={selectedClient.poNumber || ''} 
-                      onChange={(e) => handleClientFieldChange('poNumber', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
                     <label className="form-label">ORDER END DATE</label>
                     <input 
                       type="date" 
@@ -972,85 +976,30 @@ export default function ValidationsPipeline({
                     />
                   </div>
 
-                  <div className="form-group mt-6">
-                    <label className="form-label">UPLOAD PURCHASE ORDER</label>
-                    {selectedClient.poUploaded ? (
-                      <div className="uploaded-file-box">
-                        <div className="flex items-center gap-3">
-                          <div className="file-icon-wrapper">
-                            <FileText size={20} className="text-primary" />
-                          </div>
-                          <div className="flex-1" style={{ minWidth: 0 }}>
-                            <div className="font-bold text-sm text-ellipsis overflow-hidden whitespace-nowrap" style={{ color: 'var(--primary-color)' }}>
-                              {selectedClient.poFileName || "purchase_order.pdf"}
-                            </div>
-                            <div className="text-xs text-success-color font-medium">✓ Uploaded & Linked</div>
-                          </div>
-                          <button 
-                            className="btn btn-outline p-1" 
-                            style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px' }}
-                            title="Preview Document"
-                            onClick={() => setPreviewingFile(selectedClient.poFileName || "purchase_order.pdf")}
-                          >
-                            <Eye size={14} />
-                          </button>
-                          <button 
-                            className="btn btn-outline p-1" 
-                            style={{ padding: '6px', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px' }}
-                            title="Download Document"
-                            onClick={() => {
-                              const fileName = selectedClient.poFileName || "purchase_order.pdf";
-                              const fileUrl = selectedClient.poFileUrl;
-                              if (fileUrl) {
-                                const a = document.createElement('a');
-                                a.href = fileUrl;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                              } else {
-                                const blob = new Blob(["Mock Invoice/PO File Content for " + fileName], { type: "text/plain" });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                                URL.revokeObjectURL(url);
-                              }
-                            }}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                          </button>
-                          <button 
-                            className="btn-delete-file"
-                            onClick={() => updateClientPO(false, "")}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className={`dropzone ${isDraggingFile ? 'active' : ''}`}
-                        onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
-                        onDragLeave={() => setIsDraggingFile(false)}
-                        onDrop={handleFileDrop}
-                        onClick={() => document.getElementById('po-file-input').click()}
-                      >
-                        <Paperclip size={24} className="text-muted mb-2 mx-auto" />
-                        <p className="m-0 text-sm font-semibold">Click or drag and drop your invoice here</p>
-                        <p className="text-xs text-muted mt-1">PDF, PNG, JPG up to 10MB (mock upload)</p>
-                        <input 
-                          type="file" 
-                          id="po-file-input" 
-                          style={{ display: 'none' }} 
-                          onChange={handleFileSelect} 
-                        />
-                      </div>
-                    )}
-                  </div>
+                  {(() => {
+                    if (!selectedClient.orderEndDate) return null;
+                    const endDate = new Date(selectedClient.orderEndDate);
+                    const now = new Date();
+                    const diffTime = endDate.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays < 0) {
+                       return (
+                         <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#FEF2F2', border: '1px solid #F87171', borderRadius: '8px', color: '#B91C1C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                           <span style={{ fontSize: '1.25rem' }}>⚠️</span> Mission has expired!
+                         </div>
+                       );
+                    }
+                    if (diffDays <= 90) { // approx 3 months
+                       const months = Math.floor(diffDays / 30);
+                       const days = diffDays % 30;
+                       return (
+                         <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#FEF2F2', border: '1px solid #F87171', borderRadius: '8px', color: '#B91C1C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                           <span style={{ fontSize: '1.25rem' }}>⚠️</span> Mission ends in {months} month{months !== 1 ? 's' : ''} and {days} day{days !== 1 ? 's' : ''} ({diffDays} total days).
+                         </div>
+                       );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
             </div>

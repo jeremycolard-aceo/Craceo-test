@@ -397,6 +397,51 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                   />
                 </div>
 
+                {/* Recipient Types checkboxes */}
+                <div className="mb-6">
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
+                    Recipient Type
+                  </label>
+                  <div className="flex gap-6">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={editingRule.recipientTypes?.includes('internal') ?? true} 
+                        onChange={(e) => {
+                          const current = editingRule.recipientTypes || ['internal'];
+                          let updated;
+                          if (e.target.checked) {
+                            updated = current.includes('internal') ? current : [...current, 'internal'];
+                          } else {
+                            updated = current.filter(t => t !== 'internal');
+                          }
+                          handleFieldChange('recipientTypes', updated);
+                        }}
+                        style={{ accentColor: '#262E52', width: '16px', height: '16px' }}
+                      />
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>Internal</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={editingRule.recipientTypes?.includes('external') ?? false} 
+                        onChange={(e) => {
+                          const current = editingRule.recipientTypes || ['internal'];
+                          let updated;
+                          if (e.target.checked) {
+                            updated = current.includes('external') ? current : [...current, 'external'];
+                          } else {
+                            updated = current.filter(t => t !== 'external');
+                          }
+                          handleFieldChange('recipientTypes', updated);
+                        }}
+                        style={{ accentColor: '#262E52', width: '16px', height: '16px' }}
+                      />
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>External (Email Only)</span>
+                    </label>
+                  </div>
+                </div>
+
                 {/* Notification Channels checkboxes */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
@@ -420,7 +465,7 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                       }}
                       className="justify-between"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-6">
                         <input
                           type="checkbox"
                           checked={editingRule.channels?.includes('general')}
@@ -464,7 +509,7 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                       }}
                       className="justify-between"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-6">
                         <input
                           type="checkbox"
                           checked={editingRule.channels?.includes('personal')}
@@ -508,7 +553,7 @@ export default function NotificationConfig({ setHasUnsavedChanges }) {
                       }}
                       className="justify-between"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-6">
                         <input
                           type="checkbox"
                           checked={editingRule.channels?.includes('email')}
