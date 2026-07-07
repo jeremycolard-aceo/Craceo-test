@@ -245,3 +245,75 @@ export const mockNotificationRules = [
   }
 ];
 
+export const mockArchivedPOs = [
+  {
+    id: "arch_1",
+    poNumber: "VE-2024-MAINT-FR-004",
+    archivedDate: "Archived Mar 2024",
+    consultant: {
+      firstname: "Nicolas",
+      name: "Sanchez",
+      role: "Senior Engineer",
+      initials: "NS",
+      color: "#2563EB"
+    },
+    project: "Venus",
+    client: "Veolia",
+    startDate: "2024-01-01",
+    endDate: "2024-03-31",
+    totalAmount: 42500.00
+  },
+  {
+    id: "arch_2",
+    poNumber: "EN-2023-STRAT-GB-089",
+    archivedDate: "Archived Dec 2023",
+    consultant: {
+      firstname: "Sarah",
+      name: "Jenkins",
+      role: "Strategy Consultant",
+      initials: "SJ",
+      color: "#E29C21"
+    },
+    project: "Apollo Cloud",
+    client: "Engie",
+    startDate: "2023-08-15",
+    endDate: "2023-12-15",
+    totalAmount: 118200.00
+  },
+  {
+    id: "arch_3",
+    poNumber: "TO-2023-AUDIT-DE-112",
+    archivedDate: "Archived Nov 2023",
+    consultant: {
+      firstname: "Marc",
+      name: "Dubois",
+      role: "Risk Auditor",
+      initials: "MD",
+      color: "#64748B"
+    },
+    project: "Hydra Maintenance",
+    client: "TotalEnergies",
+    startDate: "2023-09-01",
+    endDate: "2023-11-30",
+    totalAmount: 28750.00
+  },
+  {
+    id: "arch_4",
+    poNumber: "ST-2023-TITAN-US-021",
+    archivedDate: "Archived Oct 2023",
+    consultant: {
+      firstname: "Elena",
+      name: "Rodriguez",
+      role: "Architecture Lead",
+      initials: "ER",
+      color: "#8B5CF6"
+    },
+    project: "Titan Infrastructure",
+    client: "Stellantis",
+    startDate: "2023-05-10",
+    endDate: "2023-10-20",
+    totalAmount: 210000.00
+  }
+];
+
+

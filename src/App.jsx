@@ -7,6 +7,7 @@ import Notifications from './Notifications';
 import FilterSidebar from './FilterSidebar';
 import DelayHistory from './DelayHistory';
 import NotificationConfig from './NotificationConfig';
+import POArchive from './POArchive';
 import { mockConsultants } from './data';
 import './index.css';
 
@@ -332,6 +333,9 @@ function App() {
           )}
           {currentView === 'notificationConfig' && (
             <NotificationConfig setHasUnsavedChanges={setHasUnsavedChanges} />
+          )}
+          {currentView === 'archive' && (
+            <POArchive />
           )}
 
 

@@ -1,4 +1,4 @@
-import { Users, Bell, LogOut, CheckSquare, Calendar, Sliders } from 'lucide-react';
+import { Users, Bell, LogOut, CheckSquare, Calendar, Sliders, Archive } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
   return (
@@ -41,6 +41,13 @@ export default function Sidebar({ currentView, setCurrentView }) {
         >
           <Sliders size={18} />
           <span>Notification Configuration</span>
+        </div>
+        <div 
+          className={`menu-item ${currentView === 'archive' ? 'active' : ''}`}
+          onClick={() => setCurrentView('archive')}
+        >
+          <Archive size={18} />
+          <span>Archive</span>
         </div>
       </div>
 
